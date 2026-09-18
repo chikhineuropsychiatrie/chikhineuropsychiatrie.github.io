@@ -5,6 +5,10 @@ import json, os, io, html, datetime
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE_URL = "https://chikhineuropsychiatrie.github.io"   # adresse de publication ; voir README
 
+# Code de validation Google Search Console. Vide = aucune balise emise.
+# Le code se recupere dans Search Console, methode "Balise HTML".
+GOOGLE_VERIFICATION = ""
+
 DOC   = "Dr F. Chikhi Bengougam"
 SPEC  = "Neuropsychiatre — Psychothérapeute"
 TEL_DISPLAY = "05 49 14 36 48"
@@ -51,6 +55,8 @@ def icon(name, size=24):
 def head(title, desc, page, depth=0, og_image="assets/img/2017_12_intestinCerveau.jpg", extra=""):
     up = "../" * depth
     canon = "%s/%s" % (SITE_URL, "" if page == "index.html" else page)
+    verif = ('\n<meta name="google-site-verification" content="%s">' % GOOGLE_VERIFICATION
+             if GOOGLE_VERIFICATION else "")
     return f"""<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -67,7 +73,7 @@ def head(title, desc, page, depth=0, og_image="assets/img/2017_12_intestinCervea
 <meta property="og:url" content="{canon}">
 <meta property="og:image" content="{SITE_URL}/{og_image}">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#1f6094">
+<meta name="theme-color" content="#1f6094">{verif}
 <link rel="icon" href="{up}assets/img/2017_12_favicon.png">
 <link rel="apple-touch-icon" href="{up}assets/img/2017_12_favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
