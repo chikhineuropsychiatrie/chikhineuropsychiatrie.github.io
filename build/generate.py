@@ -7,7 +7,7 @@ SITE_URL = "https://chikhineuropsychiatrie.github.io"   # adresse de publication
 
 # Code de validation Google Search Console. Vide = aucune balise emise.
 # Le code se recupere dans Search Console, methode "Balise HTML".
-GOOGLE_VERIFICATION = ""
+GOOGLE_VERIFICATION = "NoFKglLWocQ3Qggm3pVqNF6FOyC3WvYvR712uhxYlXg"
 
 DOC   = "Dr F. Chikhi Bengougam"
 SPEC  = "Neuropsychiatre — Psychothérapeute"
