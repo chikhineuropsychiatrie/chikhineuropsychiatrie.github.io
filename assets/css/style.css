@@ -152,6 +152,15 @@ picture { display: contents; }   /* enveloppe des versions WebP, sans effet sur 
   .brand img { height: 40px; }
   .site-header .wrap { min-height: 66px; }
 }
+/* Entre tablette et grand ecran, menu et nom ne tiennent pas ensemble sur une ligne :
+   meme doublon retire, et liens resserres juste au-dessus du menu mobile. */
+@media (min-width: 901px) and (max-width: 1180px) {
+  .brand-txt { display: none; }
+}
+@media (min-width: 901px) and (max-width: 1000px) {
+  .nav ul { gap: .15rem; }
+  .nav a { padding: .5rem .55rem; }
+}
 
 @media (max-width: 900px) {
   .nav-toggle { display: block; }
