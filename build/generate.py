@@ -67,15 +67,17 @@ def head(title, desc, page, depth=0, og_image="assets/img/2017_12_intestinCervea
 <link rel="canonical" href="{canon}">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="fr_FR">
-<meta property="og:site_name" content="Cabinet du {DOC}">
+<meta property="og:site_name" content="{DOC}">
 <meta property="og:title" content="{html.escape(title)}">
 <meta property="og:description" content="{html.escape(desc)}">
 <meta property="og:url" content="{canon}">
 <meta property="og:image" content="{SITE_URL}/{og_image}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#1f6094">{verif}
-<link rel="icon" href="{up}assets/img/2017_12_favicon.png">
-<link rel="apple-touch-icon" href="{up}assets/img/2017_12_favicon.png">
+<link rel="icon" href="{up}favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" type="image/png" sizes="96x96" href="{up}assets/img/icon-96.png">
+<link rel="icon" type="image/png" sizes="192x192" href="{up}assets/img/icon-192.png">
+<link rel="apple-touch-icon" href="{up}assets/img/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:wght@500;600&display=swap">
@@ -260,12 +262,23 @@ SCHEMA = json.dumps({
     }],
 }, ensure_ascii=False, indent=1)
 
+# Nom du site affiche par Google au-dessus de l'URL. Sans ce signal, il retombe
+# sur le proprietaire du domaine parent, et affiche « GitHub ».
+WEBSITE_SCHEMA = json.dumps({
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": DOC,
+    "alternateName": ["Dr Chikhi Neuropsychiatrie", "Cabinet du Dr Chikhi"],
+    "url": SITE_URL + "/",
+}, ensure_ascii=False, indent=1)
+
 index = head(
     f"{DOC} — Neuropsychiatre à Draria, Alger",
     "Cabinet de neuropsychiatrie, psychothérapie et relaxation thérapeutique à Draria, Alger. "
     "Stress, anxiété, dépression, troubles bipolaires, épilepsie et céphalées.",
     "index.html",
-    extra=f'<script type="application/ld+json">\n{SCHEMA}\n</script>\n',
+    extra=(f'<script type="application/ld+json">\n{SCHEMA}\n</script>\n'
+           f'<script type="application/ld+json">\n{WEBSITE_SCHEMA}\n</script>\n'),
 ) + header("index.html") + f"""
 <section class="hero">
   <img class="hero-bg" src="assets/img/2017_12_intestinCerveau.jpg" alt="" width="1500" height="630" fetchpriority="high">
