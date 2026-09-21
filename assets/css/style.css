@@ -90,6 +90,7 @@ p  { margin: 0 0 1.1em; }
 a  { color: var(--primary); text-decoration-color: rgba(31,96,148,.35); text-underline-offset: 3px; }
 a:hover { color: var(--primary-dark); text-decoration-color: currentColor; }
 img { max-width: 100%; height: auto; display: block; }
+picture { display: contents; }   /* enveloppe des versions WebP, sans effet sur la mise en page */
 
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Genere le site statique du cabinet a partir de build/articles.json."""
-import json, os, io, html, datetime, hashlib, urllib.parse
+import json, os, io, re, html, datetime, hashlib, urllib.parse
+import images
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -12,6 +13,8 @@ def _empreinte(chemin):
         return hashlib.sha1(f.read()).hexdigest()[:10]
 
 ASSET_V = {"css": _empreinte("assets/css/style.css"), "js": _empreinte("assets/js/main.js")}
+# Versions WebP des images, creees au besoin : {original: [largeurs disponibles]}
+WEBP = images.preparer(os.path.join(ROOT, "assets", "img"))
 SITE_URL = "https://chikhineuropsychiatrie.github.io"   # adresse de publication ; voir README
 
 # Code de validation Google Search Console. Vide = aucune balise emise.
@@ -93,6 +96,19 @@ WA_NOTE = {
 POLICES_PRECHARGEES = {
     "fr": ("inter-latin", "lora-latin"),
     "ar": ("noto-sans-arabic-arabic", "noto-naskh-arabic-arabic"),
+}
+
+# Largeur d'affichage des images (attribut sizes) : le navigateur prend la variante
+# WebP la plus legere qui reste nette a l'ecran.
+SIZES = {
+    # Fond du bandeau d'accueil, recadre (object-fit: cover) : meme sur telephone, il
+    # s'etale sur ~1200 px de large, car c'est la hauteur du bandeau qui le dimensionne.
+    "plein":   "(max-width: 1200px) 1200px, 100vw",
+    "colonne": "(max-width: 740px) 100vw, 545px",        # .split : deux colonnes au-dela
+    "galerie": "(max-width: 600px) 100vw, 410px",
+    "carte":   "(max-width: 680px) 100vw, (max-width: 1000px) 50vw, 380px",
+    "video":   "(max-width: 800px) 100vw, 760px",
+    "large":   "(max-width: 1180px) 100vw, 1140px",      # image en tete d'article
 }
 
 UI = {
@@ -323,9 +339,30 @@ def footer(depth=0, lang="fr"):
 </html>
 """
 
+def en_webp(content):
+    """Propose la version WebP de chaque image (balise <picture>) ; l'original reste en repli."""
+    def remplacer(m):
+        img = m.group(0)
+        src = re.search(r'\ssrc="([^"]*assets/img/([^"/]+))"', img)
+        if not src or src.group(2) not in WEBP:
+            return img
+        base, larg = src.group(1).rsplit(".", 1)[0], WEBP[src.group(2)]
+        sizes = re.search(r'\ssizes="([^"]*)"', img)
+        if sizes:                                   # sizes accompagne srcset, sur <source>
+            img = img.replace(sizes.group(0), "", 1)
+        if sizes and len(larg) > 1:
+            srcset = ", ".join("%s%s.webp %dw" % (base, "" if w == larg[-1] else "-%d" % w, w) for w in larg)
+            source = '<source type="image/webp" srcset="%s" sizes="%s">' % (srcset, sizes.group(1))
+        else:
+            source = '<source type="image/webp" srcset="%s.webp">' % base
+        return "<picture>%s%s</picture>" % (source, img)
+    return re.sub(r"<img\b[^>]*>", remplacer, content)
+
 def write(path, content):
     full = os.path.join(ROOT, path)
     os.makedirs(os.path.dirname(full), exist_ok=True)
+    if path.endswith(".html"):
+        content = en_webp(content)
     with io.open(full, "w", encoding="utf-8", newline="\n") as f:
         f.write(content)
     return len(content)
@@ -366,7 +403,7 @@ HORAIRES = [
 
 def post_card(a, depth=0):
     up = "../" * depth
-    img = (f'<div class="thumb"><img src="{up}assets/img/{a["image"]}" alt="" loading="lazy" width="600" height="375"></div>'
+    img = (f'<div class="thumb"><img src="{up}assets/img/{a["image"]}" alt="" loading="lazy" width="600" height="375" sizes="{SIZES["carte"]}"></div>'
            if a["image"] else "")
     return f"""        <article class="post-card">
 {img}
@@ -466,7 +503,7 @@ def video_card(v, lang, up):
     return f"""      <figure class="video">
         <a class="video-facade" href="https://www.youtube.com/watch?v={v['id']}" data-yt="{v['id']}"
            aria-label="{html.escape(label)}" target="_blank" rel="noopener">
-          <img src="{up}assets/img/{v['img']}" alt="" loading="lazy" width="960" height="540">
+          <img src="{up}assets/img/{v['img']}" alt="" loading="lazy" width="960" height="540" sizes="{SIZES['video']}">
           <span class="video-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></span>
           <span class="video-duree" dir="ltr">{duree}</span>
         </a>
@@ -561,7 +598,7 @@ def galerie(lang, up):
     for img, cap_fr, alt_fr, cap_ar, alt_ar in GALERIE:
         cap, alt = (cap_ar, alt_ar) if lang == "ar" else (cap_fr, alt_fr)
         items.append(f'      <figure><img src="{up}assets/img/{img}" alt="{html.escape(alt)}" '
-                     f'loading="lazy" width="1400" height="1050"><figcaption>{cap}</figcaption></figure>')
+                     f'loading="lazy" width="1400" height="1050" sizes="{SIZES["galerie"]}"><figcaption>{cap}</figcaption></figure>')
     eyebrow, titre = ("زيارة", "العيادة بالصور") if lang == "ar" else ("Visite", "Le cabinet en images")
     liste = "\n".join(items)
     return f"""
@@ -645,7 +682,7 @@ index = head(
            + video_ld(VIDEOS["depression"], "fr") + video_ld(VIDEOS["addiction"], "fr")),
 ) + header("index.html") + f"""
 <section class="hero">
-  <img class="hero-bg" src="assets/img/2017_12_intestinCerveau.jpg" alt="" width="1500" height="630" fetchpriority="high">
+  <img class="hero-bg" src="assets/img/2017_12_intestinCerveau.jpg" alt="" width="1500" height="630" fetchpriority="high" sizes="{SIZES['plein']}">
   <div class="wrap">
     <div class="hero-inner">
       <p class="eyebrow">Cabinet médical · Draria, Alger</p>
@@ -698,7 +735,7 @@ index = head(
         </ul>
       </div>
       <div class="media">
-        <img src="assets/img/cabinet-bureau.jpg" alt="Le bureau de consultation du cabinet, à Draria" loading="lazy" width="1400" height="1050">
+        <img src="assets/img/cabinet-bureau.jpg" alt="Le bureau de consultation du cabinet, à Draria" loading="lazy" width="1400" height="1050" sizes="{SIZES['colonne']}">
       </div>
     </div>
   </div>
@@ -814,7 +851,7 @@ cabinet = head(
         </p>
       </div>
       <figure class="media">
-        <img src="assets/img/draria-chateau.jpg" alt="Le château de Draria et ses deux tourelles pointues, sous un ciel bleu" width="1200" height="804" loading="lazy">
+        <img src="assets/img/draria-chateau.jpg" alt="Le château de Draria et ses deux tourelles pointues, sous un ciel bleu" width="1200" height="804" loading="lazy" sizes="{SIZES['colonne']}">
         <figcaption>
           Le château de Draria. Photo&nbsp;:
           <a href="https://commons.wikimedia.org/wiki/File:Photo_chateau_draria_30052016.jpg" target="_blank" rel="noopener">Sandervalya</a>,
@@ -1220,7 +1257,7 @@ for i, a in enumerate(articles):
     nav_html = "\n".join(nav_parts)
 
     hero_img = (f"""  <div class="wrap article-hero">
-    <img src="../assets/img/{a['image']}" alt="{html.escape(a.get('alt', ''))}" width="1200" height="440">
+    <img src="../assets/img/{a['image']}" alt="{html.escape(a.get('alt', ''))}" width="1200" height="440" sizes="{SIZES['large']}">
   </div>""" if a["image"] else "")
 
     ld = json.dumps({

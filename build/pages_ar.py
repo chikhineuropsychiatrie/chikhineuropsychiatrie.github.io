@@ -100,7 +100,7 @@ def build(g):
                                                 '<article class="post-card" lang="fr" dir="ltr">')
         m, href = META[a["slug"]], "articles/%s.html" % a["slug"]
         img = (f'<div class="thumb"><img src="../assets/img/{a["image"]}" alt="" loading="lazy" '
-               f'width="600" height="375"></div>' if a["image"] else "")
+               f'width="600" height="375" sizes="{g["SIZES"]["carte"]}"></div>' if a["image"] else "")
         return f"""        <article class="post-card">
 {img}
           <div class="body">
@@ -121,7 +121,7 @@ def build(g):
          "التوتر، القلق، الاكتئاب، الاضطراب ثنائي القطب، الصرع والصداع.",
          f"""
 <section class="hero">
-  <img class="hero-bg" src="../assets/img/2017_12_intestinCerveau.jpg" alt="" width="1500" height="630" fetchpriority="high">
+  <img class="hero-bg" src="../assets/img/2017_12_intestinCerveau.jpg" alt="" width="1500" height="630" fetchpriority="high" sizes="{g['SIZES']['plein']}">
   <div class="wrap">
     <div class="hero-inner">
       <p class="eyebrow">عيادة طبية · الدرارية، الجزائر العاصمة</p>
@@ -163,7 +163,7 @@ def build(g):
         </ul>
       </div>
       <div class="media">
-        <img src="../assets/img/cabinet-bureau.jpg" alt="مكتب الاستشارة في العيادة بالدرارية" loading="lazy" width="1400" height="1050">
+        <img src="../assets/img/cabinet-bureau.jpg" alt="مكتب الاستشارة في العيادة بالدرارية" loading="lazy" width="1400" height="1050" sizes="{g['SIZES']['colonne']}">
       </div>
     </div>
   </div>
@@ -251,7 +251,7 @@ def build(g):
         <p>{CONFIANCE}</p>
       </div>
       <figure class="media">
-        <img src="../assets/img/draria-chateau.jpg" alt="قصر الدرارية ببرجيه المدببين تحت سماء زرقاء" width="1200" height="804" loading="lazy">
+        <img src="../assets/img/draria-chateau.jpg" alt="قصر الدرارية ببرجيه المدببين تحت سماء زرقاء" width="1200" height="804" loading="lazy" sizes="{g['SIZES']['colonne']}">
         <figcaption>
           قصر الدرارية. تصوير:
           <a href="https://commons.wikimedia.org/wiki/File:Photo_chateau_draria_30052016.jpg" target="_blank" rel="noopener">Sandervalya</a>،
@@ -579,7 +579,7 @@ def build(g):
             f'      <a href="{newer["slug"]}.html">{META[newer["slug"]]["title"]} ←</a>' if newer else "",
         ])
         hero = (f"""  <div class="wrap article-hero">
-    <img src="../../assets/img/{a['image']}" alt="{m['alt']}" width="1200" height="440">
+    <img src="../../assets/img/{a['image']}" alt="{m['alt']}" width="1200" height="440" sizes="{g['SIZES']['large']}">
   </div>""" if a["image"] else "")
         auteur = ({"@type": "Person", "name": a["author"], "alternateName": AUTEURS_AR[a["author"]][0],
                    "jobTitle": a["author_role"].capitalize()} if a.get("author") else
