@@ -59,6 +59,9 @@ ICONS = {
     "check": '<path d="M20 6 9 17l-5-5"/>',
     "cap":   '<path d="m12 3 10 5-10 5L2 8z"/><path d="M6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5"/>',
     "star":  '<path d="m12 3 2.7 5.6 6.3.9-4.5 4.3 1 6.2-5.5-3-5.5 3 1-6.2L3 9.5l6.3-.9z"/>',
+    "briefcase": '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7"/><path d="M3 12.5h18"/>',
+    "award": '<circle cx="12" cy="9" r="5.5"/><path d="M8.8 13.5 7.5 21l4.5-2.6 4.5 2.6-1.3-7.5"/>',
+    "users": '<circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M15.5 4.8a3.5 3.5 0 0 1 0 6.4"/><path d="M17.5 14.3c2.1.8 3.5 2.9 3.5 5.7"/>',
 }
 
 def icon(name, size=24):
@@ -617,10 +620,11 @@ CERTIFICATS = [
     "Ericksonian Hypnosis — Daniel Johns, Royaume-Uni",
 ]
 
-def timeline(items):
+def timeline(items, ico):
     out = []
     for when, what, where in items:
         out.append(f"""        <div class="card">
+          <div class="ico">{icon(ico)}</div>
           <p class="meta">{when}</p>
           <h3>{what}</h3>
           <p>{where}</p>
@@ -653,7 +657,7 @@ cursus = head(
       <h2>Formations</h2>
     </div>
     <div class="grid grid-3">
-{timeline(FORMATION)}
+{timeline(FORMATION, "cap")}
     </div>
   </div>
 </section>
@@ -669,30 +673,32 @@ cursus = head(
       </p>
     </div>
     <div class="grid grid-2">
-{timeline(EXPERIENCE)}
+{timeline(EXPERIENCE, "briefcase")}
     </div>
   </div>
 </section>
 
 <section>
   <div class="wrap">
-    <div class="split" style="align-items:start">
-      <div class="body">
-        <p class="eyebrow">Formation continue</p>
-        <h2>Certificats</h2>
+    <div class="section-head">
+      <p class="eyebrow">Formation continue</p>
+      <h2>Certificats et sociétés savantes</h2>
+    </div>
+    <div class="grid grid-2" style="align-items:start">
+      <div class="card">
+        <div class="ico">{icon('award')}</div>
+        <h3>Certificats</h3>
         <ul class="list-check">
 {certs}
         </ul>
       </div>
-      <div class="body">
-        <div class="card">
-          <div class="ico">{icon('star')}</div>
-          <h3>Sociétés savantes</h3>
-          <ul class="list-check">
-            <li>Membre de la Société Algérienne de Psychiatrie (S.A.P)</li>
-            <li>Membre de l’Association Algérienne des Psychiatres d’Exercice Privé (AAPEP)</li>
-          </ul>
-        </div>
+      <div class="card">
+        <div class="ico">{icon('users')}</div>
+        <h3>Sociétés savantes</h3>
+        <ul class="list-check">
+          <li>Membre de la Société Algérienne de Psychiatrie (S.A.P)</li>
+          <li>Membre de l’Association Algérienne des Psychiatres d’Exercice Privé (AAPEP)</li>
+        </ul>
       </div>
     </div>
   </div>
