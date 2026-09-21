@@ -1,8 +1,17 @@
 # -*- coding: utf-8 -*-
 """Genere le site statique du cabinet a partir de build/articles.json."""
-import json, os, io, html, datetime
+import json, os, io, html, datetime, hashlib
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Empreinte du contenu de la feuille de style et du script, ajoutee a leur adresse.
+# GitHub Pages laisse les navigateurs les garder 10 minutes en cache : sans cela, une
+# page neuve peut s'afficher avec une feuille de style perimee apres une mise a jour.
+def _empreinte(chemin):
+    with open(os.path.join(ROOT, chemin), "rb") as f:
+        return hashlib.sha1(f.read()).hexdigest()[:10]
+
+ASSET_V = {"css": _empreinte("assets/css/style.css"), "js": _empreinte("assets/js/main.js")}
 SITE_URL = "https://chikhineuropsychiatrie.github.io"   # adresse de publication ; voir README
 
 # Code de validation Google Search Console. Vide = aucune balise emise.
@@ -182,7 +191,7 @@ def head(title, desc, page, depth=0, og_image="assets/img/2017_12_intestinCervea
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="{FONTS[lang]}">
-<link rel="stylesheet" href="{up}assets/css/style.css">
+<link rel="stylesheet" href="{up}assets/css/style.css?v={ASSET_V['css']}">
 {extra}</head>
 <body>
 <a class="skip" href="#contenu">{UI[lang]["skip"]}</a>
@@ -292,7 +301,7 @@ def footer(depth=0, lang="fr"):
   </div>
 </footer>
 
-<script src="{up}assets/js/main.js"></script>
+<script src="{up}assets/js/main.js?v={ASSET_V['js']}"></script>
 </body>
 </html>
 """
@@ -1202,7 +1211,9 @@ write("sitemap.xml",
       '<?xml version="1.0" encoding="UTF-8"?>\n'
       '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + urls + "\n</urlset>\n")
 
-write("robots.txt", "User-agent: *\nAllow: /\n\nSitemap: %s/sitemap.xml\n" % SITE_URL)
+# build/ contient les sources (traductions en fragments, generateur) : servies par
+# GitHub Pages comme le reste du depot, elles n'ont pas a etre indexees.
+write("robots.txt", "User-agent: *\nAllow: /\nDisallow: /build/\n\nSitemap: %s/sitemap.xml\n" % SITE_URL)
 write(".nojekyll", "")
 
 write("404.html", head("Page introuvable — " + DOC, "La page demandée n’existe pas.", "404.html",
