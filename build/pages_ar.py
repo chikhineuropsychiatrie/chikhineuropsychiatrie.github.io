@@ -460,7 +460,8 @@ def build(g):
 </section>
 """ + cta("احجزوا موعدا",
           "يمكنكم الوثوق في سنوات خبرتها الطويلة في التكفل بالأشخاص الذين يعانون نفسيا أو ذهنيا.",
-          "اتصلوا بنا", "contact.html"))
+          "اتصلوا بنا", "contact.html"),
+         extra=g["profil_ld"]("ar"))
 
     # ------------------------------------------------------------ contact
     page("contact.html",
@@ -583,7 +584,7 @@ def build(g):
   </div>""" if a["image"] else "")
         auteur = ({"@type": "Person", "name": a["author"], "alternateName": AUTEURS_AR[a["author"]][0],
                    "jobTitle": a["author_role"].capitalize()} if a.get("author") else
-                  {"@type": "Person", "name": g["DOC"], "alternateName": DOC})
+                  g["auteur_dr"]())
         ld = json.dumps({
             "@context": "https://schema.org",
             "@type": "Article",
@@ -594,7 +595,7 @@ def build(g):
             **({"image": "%s/assets/img/%s" % (g["SITE_URL"], a["image"])} if a["image"] else {}),
             "datePublished": a["date"],
             "author": auteur,
-            "publisher": {"@type": "Organization", "name": "Cabinet du " + g["DOC"]},
+            "publisher": g["EDITEUR"],
             "mainEntityOfPage": "%s/ar/articles/%s.html" % (g["SITE_URL"], slug),
             "translationOfWork": {"@id": "%s/articles/%s.html" % (g["SITE_URL"], slug)},
         }, ensure_ascii=False, indent=1)

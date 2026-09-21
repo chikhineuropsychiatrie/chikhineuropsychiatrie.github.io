@@ -635,6 +635,49 @@ def wa_bouton(lang, cls="btn-ghost"):
 # s'intitule « Articles du Dr ... » et doit porter sur la psychiatrie.
 recent = "\n".join(post_card(a) for a in [x for x in articles if not x.get("author")][:3])
 
+# Le medecin, decrit une fois (@id) et repris par le cabinet, la page cursus et ses
+# articles : Google relie ainsi l'autrice, ses diplomes et le cabinet. Uniquement des
+# faits affiches sur la page cursus.
+DR_ID = SITE_URL + "/#dr-chikhi"
+UNIV_ALGER = {"@type": "CollegeOrUniversity", "name": "Université de médecine d’Alger"}
+UNIV_KIEV = {"@type": "CollegeOrUniversity", "name": "Université de médecine de Kiev",
+             "address": {"@type": "PostalAddress", "addressCountry": "UA"}}
+EDITEUR = {"@type": "MedicalBusiness", "@id": SITE_URL + "/#cabinet",
+           "name": "Cabinet du " + DOC, "url": SITE_URL + "/"}
+
+def auteur_dr():
+    return {"@type": "Person", "@id": DR_ID, "name": DOC, "alternateName": DOC_AR,
+            "jobTitle": "Neuropsychiatre, psychothérapeute", "url": SITE_URL + "/cursus.html"}
+
+def profil_ld(lang):
+    """Page cursus : fiche complete du medecin."""
+    def diplome(nom, annee, univ):
+        return {"@type": "EducationalOccupationalCredential", "credentialCategory": "degree",
+                "name": nom, "dateCreated": annee, "recognizedBy": univ}
+    personne = dict(auteur_dr(), **{
+        "description": "Neuropsychiatre psychothérapeute d’exercice libéral à Draria (Alger).",
+        "worksFor": {"@id": SITE_URL + "/#cabinet"},
+        "alumniOf": [UNIV_ALGER, UNIV_KIEV],
+        "hasCredential": [
+            diplome("Diplôme de Docteur en médecine", "1988", UNIV_ALGER),
+            diplome("Diplôme d’études médicales spécialisées en psychiatrie", "1992", UNIV_ALGER),
+            diplome("Diplôme de neurologie", "2004", UNIV_KIEV),
+        ],
+        "memberOf": [
+            {"@type": "Organization", "name": "Société Algérienne de Psychiatrie", "alternateName": "SAP"},
+            {"@type": "Organization", "name": "Association Algérienne des Psychiatres d’Exercice Privé",
+             "alternateName": "AAPEP"},
+        ],
+        "knowsAbout": ["Psychiatrie", "Neurologie", "Psychothérapie", "Relaxation thérapeutique",
+                       "Hypnose ericksonienne", "Thérapies cognitivo-comportementales", "Dépression",
+                       "Anxiété", "Troubles bipolaires", "Épilepsie", "Céphalées",
+                       "Addictions aux drogues douces"],
+    })
+    ld = {"@context": "https://schema.org", "@type": "ProfilePage", "inLanguage": lang,
+          "url": SITE_URL + ("/ar/cursus.html" if lang == "ar" else "/cursus.html"),
+          "mainEntity": personne}
+    return '<script type="application/ld+json">\n%s\n</script>\n' % json.dumps(ld, ensure_ascii=False, indent=1)
+
 SCHEMA = json.dumps({
     "@context": "https://schema.org",
     "@type": "MedicalBusiness",
@@ -648,6 +691,9 @@ SCHEMA = json.dumps({
     "medicalSpecialty": ["Psychiatric", "Neurologic"],
     "geo": {"@type": "GeoCoordinates", "latitude": GEO_LAT, "longitude": GEO_LON},
     "hasMap": GMAPS_URL,
+    "sameAs": ["https://sihhatech.com/etablissements/f_bengougam-epse-chikhi"],
+    "founder": auteur_dr(),
+    "foundingDate": "2015-05",
     "address": {
         "@type": "PostalAddress",
         "streetAddress": ADDR1,
@@ -1023,6 +1069,7 @@ cursus = head(
     "Parcours du " + DOC + " : formations, diplômes, certificats et expériences professionnelles "
     "en neuropsychiatrie, psychothérapie et hypnose.",
     "cursus.html",
+    extra=profil_ld("fr"),
 ) + header("cursus.html") + f"""
 <div class="page-head">
   <div class="wrap">
@@ -1242,7 +1289,7 @@ for i, a in enumerate(articles):
     # Auteur : le Dr Chikhi par defaut ; certains articles sont d'une autre plume.
     auteur = a.get("author") or DOC
     signature = "%s, %s" % (auteur, a["author_role"]) if a.get("author_role") else auteur
-    person = {"@type": "Person", "name": auteur}
+    person = {"@type": "Person", "name": auteur} if a.get("author") else auteur_dr()
     if a.get("author_role"):
         person["jobTitle"] = a["author_role"].capitalize()
     prev_a = articles[i + 1] if i + 1 < len(articles) else None
@@ -1270,7 +1317,7 @@ for i, a in enumerate(articles):
         **({"image": "%s/assets/img/%s" % (SITE_URL, a["image"])} if a["image"] else {}),
         "datePublished": a["date"],
         "author": person,
-        "publisher": {"@type": "Organization", "name": "Cabinet du " + DOC},
+        "publisher": EDITEUR,
         "mainEntityOfPage": f"{SITE_URL}/articles/{a['slug']}.html",
     }, ensure_ascii=False, indent=1)
 
