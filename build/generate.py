@@ -59,7 +59,7 @@ NAV_AR = [
     ("../articles.html", "المقالات"),
     ("contact.html",     "اتصل بنا"),
 ]
-DOC_AR   = "الدكتورة شيخي"
+DOC_AR   = "الدكتورة ف. شيخي بن قوقام"
 ADDR2_AR = "الدرارية، الجزائر العاصمة"
 # Numeros et adresses latines forces de gauche a droite : dans un texte arabe,
 # « 05 49 14 36 48 » s'afficherait sinon groupes inverses.
@@ -367,6 +367,7 @@ SCHEMA = json.dumps({
     "@type": "MedicalBusiness",
     "@id": SITE_URL + "/#cabinet",
     "name": "Cabinet du " + DOC,
+    "alternateName": "عيادة " + DOC_AR,
     "description": "Cabinet de neuropsychiatrie, psychothérapie et relaxation thérapeutique à Draria, Alger.",
     "url": SITE_URL,
     "telephone": "+213 549 14 36 48",
