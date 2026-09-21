@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Genere le site statique du cabinet a partir de build/articles.json."""
 import json, os, io, re, html, datetime, hashlib, urllib.parse
-import images
+import images, articles_md
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -14,7 +14,7 @@ def _empreinte(chemin):
 
 ASSET_V = {"css": _empreinte("assets/css/style.css"), "js": _empreinte("assets/js/main.js")}
 # Versions WebP des images, creees au besoin : {original: [largeurs disponibles]}
-WEBP = images.preparer(os.path.join(ROOT, "assets", "img"))
+WEBP = images.preparer(os.path.join(ROOT, "assets", "img"), os.path.join(ROOT, "build", "images-webp.json"))
 SITE_URL = "https://chikhineuropsychiatrie.github.io"   # adresse de publication ; voir README
 
 # Code de validation Google Search Console. Vide = aucune balise emise.
@@ -366,11 +366,16 @@ def en_webp(content):
         return "<picture>%s%s</picture>" % (source, img)
     return re.sub(r"<img\b[^>]*>", remplacer, content)
 
+# Empreinte du titre et du contenu principal de chaque page : date le plan du site.
+SIGNATURES = {}
+
 def write(path, content):
     full = os.path.join(ROOT, path)
     os.makedirs(os.path.dirname(full), exist_ok=True)
     if path.endswith(".html"):
         content = en_webp(content)
+        parties = (re.search(r"<title>.*?</title>", content, re.S), re.search(r"<main\b.*</main>", content, re.S))
+        SIGNATURES[path] = hashlib.sha1("".join(m.group(0) for m in parties if m).encode("utf-8")).hexdigest()[:12]
     with io.open(full, "w", encoding="utf-8", newline="\n") as f:
         f.write(content)
     return len(content)
@@ -379,6 +384,9 @@ def write(path, content):
 # --------------------------------------------------------------- donnees
 
 articles = json.load(open(os.path.join(ROOT, "build/articles.json"), encoding="utf-8"))
+# Articles rediges en Markdown (contenu/articles/, voir son LISEZ-MOI.md).
+articles = articles_md.fusionner(articles, os.path.join(ROOT, "contenu", "articles"),
+                                 os.path.join(ROOT, "assets", "img"))
 AR_ARTICLES = [a["slug"] for a in articles
                if os.path.exists(os.path.join(ROOT, "build", "articles_ar", a["slug"] + ".html"))]
 AR_PAGES += ["articles.html"] + ["articles/%s.html" % s for s in AR_ARTICLES]
@@ -1371,6 +1379,11 @@ for i, a in enumerate(articles):
 
     write("articles/%s.html" % a["slug"], page)
 
+# Article retire (fichier Markdown supprime) : sa page disparait aussi.
+for f in os.listdir(os.path.join(ROOT, "articles")):
+    if f.endswith(".html") and f[:-5] not in {a["slug"] for a in articles}:
+        os.remove(os.path.join(ROOT, "articles", f))
+
 
 # --------------------------------------------------------------- version arabe
 
@@ -1382,17 +1395,25 @@ pages_ar.build(globals())
 
 pages_for_map = ([h for h, _ in NAV] + ["ar/" + p for p in AR_PAGES]
                  + ["articles/%s.html" % a["slug"] for a in articles])
-today = "2026-09-18"
+# Date de derniere modification reelle de chaque page, gardee dans build/lastmod.json :
+# elle ne change que si le titre ou le contenu principal de la page change.
+F_DATES = os.path.join(ROOT, "build", "lastmod.json")
+dates = json.load(open(F_DATES, encoding="utf-8")) if os.path.exists(F_DATES) else {}
+dates = {p: dates[p] if dates.get(p, [None])[0] == SIGNATURES[p]
+         else [SIGNATURES[p], datetime.date.today().isoformat()] for p in pages_for_map}
+with io.open(F_DATES, "w", encoding="utf-8", newline="\n") as f:
+    json.dump(dates, f, indent=1, sort_keys=True)
+    f.write("\n")
 urls = "\n".join(
-    "  <url><loc>%s/%s</loc><lastmod>%s</lastmod></url>" % (SITE_URL, canon_path(p), today)
+    "  <url><loc>%s/%s</loc><lastmod>%s</lastmod></url>" % (SITE_URL, canon_path(p), dates[p][1])
     for p in pages_for_map)
 write("sitemap.xml",
       '<?xml version="1.0" encoding="UTF-8"?>\n'
       '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + urls + "\n</urlset>\n")
 
-# build/ contient les sources (traductions en fragments, generateur) : servies par
-# GitHub Pages comme le reste du depot, elles n'ont pas a etre indexees.
-write("robots.txt", "User-agent: *\nAllow: /\nDisallow: /build/\n\nSitemap: %s/sitemap.xml\n" % SITE_URL)
+# build/ (generateur, traductions en fragments) et contenu/ (articles en Markdown) :
+# servis par GitHub Pages comme le reste du depot, ils n'ont pas a etre indexes.
+write("robots.txt", "User-agent: *\nAllow: /\nDisallow: /build/\nDisallow: /contenu/\n\nSitemap: %s/sitemap.xml\n" % SITE_URL)
 write(".nojekyll", "")
 
 write("404.html", head("Page introuvable — " + DOC, "La page demandée n’existe pas.", "404.html",

@@ -1,0 +1,47 @@
+# Regenere le site quand un article (contenu/), une image ou le generateur change,
+# puis enregistre les pages produites ; GitHub Pages les publie dans la foulee.
+# Une generation sans changement de contenu ne produit aucun enregistrement.
+name: Publier le site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "contenu/**"
+      - "assets/img/**"
+      - "assets/css/**"
+      - "assets/js/**"
+      - "build/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publier
+  cancel-in-progress: false
+
+jobs:
+  generer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pillow markdown
+      - name: Générer le site
+        working-directory: build
+        run: python generate.py
+      - name: Enregistrer les pages produites
+        run: |
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Rien à enregistrer : le site était déjà à jour."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Pages régénérées"
+            git push
+          fi
