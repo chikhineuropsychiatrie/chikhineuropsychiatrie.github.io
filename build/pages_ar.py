@@ -633,7 +633,7 @@ def build(g):
 """
         write("ar/articles/%s.html" % slug,
               head(m["seo_title"], m["description"], "ar/articles/%s.html" % slug, depth=2,
-                   og_image="assets/img/" + a["image"] if a["image"] else "assets/img/2017_12_intestinCerveau.jpg",
+                   og_image="assets/img/" + a["image"] if a["image"] else None,
                    extra='<script type="application/ld+json">\n%s\n</script>\n' % ld + v_ld)
               + header("articles.html", depth=2, lang="ar", switch_to="../../articles/%s.html" % slug)
               + body + footer(depth=2, lang="ar"))

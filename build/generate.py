@@ -178,7 +178,7 @@ def canon_path(page):
     return page[:-len("index.html")] if page.endswith("index.html") else page
 
 
-def head(title, desc, page, depth=0, og_image="assets/img/2017_12_intestinCerveau.jpg", extra="", balise_base=""):
+def head(title, desc, page, depth=0, og_image=None, extra="", balise_base=""):
     # balise_base : doit preceder tout lien relatif (feuille de style, polices), sinon ignore pour eux.
     lang = "ar" if page.startswith("ar/") else "fr"
     up = "../" * depth
@@ -198,6 +198,14 @@ def head(title, desc, page, depth=0, og_image="assets/img/2017_12_intestinCervea
                 % (fr_u, ar_u, fr_u, "fr_FR" if lang == "ar" else "ar_DZ"))
     rtl = ' dir="rtl"' if lang == "ar" else ""
     locale = "ar_DZ" if lang == "ar" else "fr_FR"
+    og_details = ""
+    if og_image is None:   # image de partage du cabinet (build/partage.py)
+        og_image = "assets/img/og-cabinet%s.jpg" % ("-ar" if lang == "ar" else "")
+        og_alt = (DOC_AR + " — عيادة الطب العصبي النفسي بالدرارية" if lang == "ar"
+                  else DOC + " — cabinet de neuropsychiatrie à Draria")
+        og_details = ('\n<meta property="og:image:width" content="1200">'
+                      '\n<meta property="og:image:height" content="630">'
+                      '\n<meta property="og:image:alt" content="%s">' % html.escape(og_alt))
     polices = "".join('<link rel="preload" href="%sassets/fonts/%s.woff2" as="font" type="font/woff2" crossorigin>\n'
                       % (up, p) for p in POLICES_PRECHARGEES[lang])
     return f"""<!DOCTYPE html>
@@ -214,7 +222,7 @@ def head(title, desc, page, depth=0, og_image="assets/img/2017_12_intestinCervea
 <meta property="og:title" content="{html.escape(title)}">
 <meta property="og:description" content="{html.escape(desc)}">
 <meta property="og:url" content="{canon}">
-<meta property="og:image" content="{SITE_URL}/{og_image}">
+<meta property="og:image" content="{SITE_URL}/{og_image}">{og_details}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#1f6094">{verif}
 <link rel="icon" href="{up}favicon.ico" sizes="16x16 32x32 48x48">
@@ -692,6 +700,9 @@ SCHEMA = json.dumps({
     "geo": {"@type": "GeoCoordinates", "latitude": GEO_LAT, "longitude": GEO_LON},
     "hasMap": GMAPS_URL,
     "sameAs": ["https://sihhatech.com/etablissements/f_bengougam-epse-chikhi"],
+    "image": [SITE_URL + "/assets/img/" + n
+              for n in ("cabinet-bureau.jpg", "cabinet-accueil.jpg", "cabinet-diplomes.jpg")],
+    "logo": SITE_URL + "/assets/img/icon-192.png",
     "founder": auteur_dr(),
     "foundingDate": "2015-05",
     "address": {
@@ -1326,7 +1337,7 @@ for i, a in enumerate(articles):
         a.get("description") or a["excerpt"][:160],
         "articles/" + a["slug"] + ".html",
         depth=1,
-        og_image="assets/img/" + a["image"] if a["image"] else "assets/img/2017_12_intestinCerveau.jpg",
+        og_image="assets/img/" + a["image"] if a["image"] else None,
         extra=f'<script type="application/ld+json">\n{ld}\n</script>\n' + v_ld,
     ) + header("articles.html", depth=1,
                switch_to=("../ar/articles/%s.html" % a["slug"]) if a["slug"] in AR_ARTICLES else None) + f"""

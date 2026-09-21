@@ -8,7 +8,7 @@ Les originaux restent en place : navigateurs anciens, apercus de partage.
 import os
 from PIL import Image, ImageOps
 
-# Icones d'onglet : jamais affichees par une balise <img>.
+# Icones d'onglet et images de partage (og-*) : jamais affichees par une balise <img>.
 EXCLUS = {"icon-96.png", "icon-192.png"}
 
 
@@ -30,7 +30,7 @@ def preparer(dossier):
     table = {}
     for nom in sorted(os.listdir(dossier)):
         base, ext = os.path.splitext(nom)
-        if ext.lower() not in (".jpg", ".jpeg", ".png") or nom in EXCLUS:
+        if ext.lower() not in (".jpg", ".jpeg", ".png") or nom in EXCLUS or nom.startswith("og-"):
             continue
         src = os.path.join(dossier, nom)
         with Image.open(src) as im:
