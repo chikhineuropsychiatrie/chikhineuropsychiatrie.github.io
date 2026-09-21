@@ -314,7 +314,7 @@ AR_PAGES += ["articles.html"] + ["articles/%s.html" % s for s in AR_ARTICLES]
 
 SERVICES = [
     ("brain", "Neuropsychiatrie",
-     "Diagnostic et prise en charge des troubles neurologiques et psychiatriques : dépression, anxiété, troubles bipolaires, épilepsie, céphalées."),
+     "Diagnostic et prise en charge des troubles neurologiques et psychiatriques : dépression, anxiété, troubles bipolaires, épilepsie, céphalées, addictions aux drogues douces."),
     ("chat", "Psychothérapie",
      "Entretiens réguliers dans une relation de confiance et de confidentialité, seuls ou en complément d’un traitement."),
     ("leaf", "Relaxation thérapeutique",
@@ -385,7 +385,7 @@ VIDEOS = {
             "titre": "الاكتئاب: تشخيص مبكر واستراتيجيات علاجية فعالة",
             "desc": "في هذا اللقاء مع منبر الصحة الجزائري «37 درجة»، تشرح " + DOC_AR + " كل ما يتعلق "
                     "بالاكتئاب، من طريقة التشخيص والمتابعة إلى مرحلة العلاج.",
-            "intro": "<strong>فيديو.</strong> تتناول " + DOC_AR + " هذا الموضوع أيضا في لقاء مصور مدته "
+            "intro": "<strong>فيديو.</strong> تتناول " + DOC_AR + " هذا الموضوع أيضا في لقاء مصور بالفرنسية مدته "
                      "24 دقيقة، من التشخيص إلى العلاج.",
         },
     },
@@ -401,7 +401,8 @@ VIDEOS = {
                     "causes : curiosité, influence de l’entourage, fuite des problèmes, recherche de "
                     "performance ou soulagement de troubles psychiques.",
             "intro": "<strong>Pour aller plus loin.</strong> Le Dr Chikhi consacre un entretien vidéo à "
-                     "l’addiction, dont le mauvais usage des médicaments psychotropes fait partie.",
+                     "l’addiction, dont le mauvais usage des médicaments psychotropes fait partie. "
+                     "Le cabinet prend en charge les addictions aux drogues douces.",
         },
         "ar": {
             "titre": "الإدمان: أسبابه وتأثيره",
@@ -409,8 +410,8 @@ VIDEOS = {
                     "المشروعة كالقنب والكوكايين، وقد يتحول إلى حاجة لا تقاوم إلى تعاطيها تؤثر في الدماغ "
                     "والسلوك. وتعرض " + DOC_AR + " أسبابه المتعددة: الفضول، والتأثير الاجتماعي، والهروب "
                     "من المشكلات، والرغبة في تحسين الأداء، أو التخفيف من اضطرابات نفسية.",
-            "intro": "<strong>للتعمق أكثر.</strong> خصصت " + DOC_AR + " لقاء مصورا للإدمان، ومن صوره "
-                     "سوء استعمال الأدوية النفسية.",
+            "intro": "<strong>للتعمق أكثر.</strong> خصصت " + DOC_AR + " لقاء مصورا بالفرنسية للإدمان، ومن صوره "
+                     "سوء استعمال الأدوية النفسية. وتتكفل العيادة بحالات الإدمان على المخدرات الخفيفة.",
         },
     },
 }
@@ -430,7 +431,7 @@ def video_card(v, lang, up):
     duree = "%d:%02d" % (v["secondes"] // 60, v["secondes"] % 60)
     if lang == "ar":
         label = "تشغيل الفيديو: " + t["titre"]
-        meta = 'فيديو · %d دقيقة · %s · <a href="%s" target="_blank" rel="noopener">«37 درجة»</a>' % (
+        meta = 'فيديو بالفرنسية · %d دقيقة · %s · <a href="%s" target="_blank" rel="noopener">«37 درجة»</a>' % (
             minutes, ar_date(v["date"]), MEDIA_URL)
     else:
         label = "Lire la vidéo : " + t["titre"]
@@ -464,6 +465,7 @@ def video_ld(v, lang):
         "duration": "PT%dM%dS" % (v["secondes"] // 60, v["secondes"] % 60),
         "embedUrl": "https://www.youtube-nocookie.com/embed/" + v["id"],
         "url": "https://www.youtube.com/watch?v=" + v["id"],
+        "inLanguage": "fr",
         "publisher": {"@type": "Organization", "name": "37° degrés", "url": MEDIA_URL},
     }, ensure_ascii=False, indent=1)
 
@@ -493,7 +495,7 @@ def section_videos(lang, up):
     """Section « En video » des pages d'accueil."""
     if lang == "ar":
         head_ = (f'<p class="eyebrow">فيديو</p>\n      <h2>{DOC_AR} تجيب عن أسئلة «37 درجة»</h2>\n'
-                 f'      <p>لقاءان مصوران مع منبر الصحة الجزائري '
+                 f'      <p>لقاءان مصوران باللغة الفرنسية مع منبر الصحة الجزائري '
                  f'<a href="{MEDIA_URL}" target="_blank" rel="noopener">«37 درجة»</a>.</p>')
     else:
         head_ = ('<p class="eyebrow">En vidéo</p>\n      <h2>Le Dr Chikhi répond aux questions de 37° degrés</h2>\n'
@@ -588,8 +590,8 @@ index = head(
       <p class="eyebrow">Consultations</p>
       <h2>Ce que nous prenons en charge</h2>
       <p>
-        Stress, anxiété, dépression nerveuse, troubles bipolaires, épilepsie, céphalées
-        et autres troubles psychiatriques ou neurologiques.
+        Stress, anxiété, dépression nerveuse, troubles bipolaires, épilepsie, céphalées,
+        addictions aux drogues douces et autres troubles psychiatriques ou neurologiques.
       </p>
     </div>
     <div class="grid grid-3">
@@ -724,8 +726,8 @@ cabinet = head(
         </p>
         <p>
           Nous prenons en charge les troubles psychologiques, psychiatriques et neurologiques :
-          stress, anxiété, dépression nerveuse, troubles bipolaires, épilepsie, céphalées
-          et autres troubles psychiatriques ou neurologiques.
+          stress, anxiété, dépression nerveuse, troubles bipolaires, épilepsie, céphalées,
+          addictions aux drogues douces et autres troubles psychiatriques ou neurologiques.
         </p>
         <p>
           Vous pouvez faire confiance à sa longue expérience dans la prise en charge des personnes
