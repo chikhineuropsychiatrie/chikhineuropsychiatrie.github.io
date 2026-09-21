@@ -363,6 +363,157 @@ cards = "\n".join(
         </div>""" for ic, t, d in SERVICES)
 
 demarche = "\n".join(f"          <li>{x}</li>" for x in DEMARCHE)
+# ---- Videos du Dr Chikhi : entretiens pour le media sante algerien 37° degres.
+# Textes tires des titres et descriptions officiels des videos, sans rien y
+# ajouter. La vignette est hebergee ici ; le lecteur YouTube (sans cookies) ne se
+# charge qu'au clic (assets/js/main.js).
+MEDIA_URL = "https://www.37degres.dz/"
+VIDEOS = {
+    "depression": {
+        "id": "uVGxKyq7iy0", "img": "video-depression.jpg", "secondes": 1450,
+        "date": "2023-08-04", "upload": "2023-08-04T06:16:46-07:00",
+        "article": "depression-nerveuse", "position": "haut",
+        "fr": {
+            "titre": "La dépression : diagnostic précoce et stratégies thérapeutiques efficaces",
+            "desc": "Dans cet entretien pour le média santé algérien 37° degrés, le Dr Chikhi fait le tour "
+                    "de la dépression : comment on la diagnostique, comment se déroule le suivi, et quels "
+                    "traitements sont efficaces.",
+            "intro": "<strong>En vidéo.</strong> Le Dr Chikhi aborde aussi ce sujet dans un entretien de "
+                     "24 minutes, du diagnostic au traitement.",
+        },
+        "ar": {
+            "titre": "الاكتئاب: تشخيص مبكر واستراتيجيات علاجية فعالة",
+            "desc": "في هذا اللقاء مع منبر الصحة الجزائري «37 درجة»، تشرح " + DOC_AR + " كل ما يتعلق "
+                    "بالاكتئاب، من طريقة التشخيص والمتابعة إلى مرحلة العلاج.",
+            "intro": "<strong>فيديو.</strong> تتناول " + DOC_AR + " هذا الموضوع أيضا في لقاء مصور مدته "
+                     "24 دقيقة، من التشخيص إلى العلاج.",
+        },
+    },
+    "addiction": {
+        "id": "ZQg9iiENrl0", "img": "video-addiction.jpg", "secondes": 1031,
+        "date": "2023-08-20", "upload": "2023-08-20T02:42:22-07:00",
+        "article": "medicaments-psychotropes", "position": "bas",
+        "fr": {
+            "titre": "L’addiction : ses causes et ses effets",
+            "desc": "L’addiction, c’est l’usage nocif de substances comme l’alcool, les médicaments "
+                    "psychotropes ou les drogues illicites (cannabis, cocaïne), qui peut devenir un besoin "
+                    "irrésistible et agit sur le cerveau et le comportement. Le Dr Chikhi en détaille les "
+                    "causes : curiosité, influence de l’entourage, fuite des problèmes, recherche de "
+                    "performance ou soulagement de troubles psychiques.",
+            "intro": "<strong>Pour aller plus loin.</strong> Le Dr Chikhi consacre un entretien vidéo à "
+                     "l’addiction, dont le mauvais usage des médicaments psychotropes fait partie.",
+        },
+        "ar": {
+            "titre": "الإدمان: أسبابه وتأثيره",
+            "desc": "الإدمان هو إساءة استخدام مواد ضارة بالصحة، مثل الكحول والأدوية النفسية والمخدرات غير "
+                    "المشروعة كالقنب والكوكايين، وقد يتحول إلى حاجة لا تقاوم إلى تعاطيها تؤثر في الدماغ "
+                    "والسلوك. وتعرض " + DOC_AR + " أسبابه المتعددة: الفضول، والتأثير الاجتماعي، والهروب "
+                    "من المشكلات، والرغبة في تحسين الأداء، أو التخفيف من اضطرابات نفسية.",
+            "intro": "<strong>للتعمق أكثر.</strong> خصصت " + DOC_AR + " لقاء مصورا للإدمان، ومن صوره "
+                     "سوء استعمال الأدوية النفسية.",
+        },
+    },
+}
+MOIS_AR = ["جانفي", "فيفري", "مارس", "أفريل", "ماي", "جوان", "جويلية", "أوت",
+           "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"]
+
+
+def ar_date(iso):
+    y, m, d = (int(x) for x in iso.split("-"))
+    return "%d %s %d" % (d, MOIS_AR[m - 1], y)
+
+
+def video_card(v, lang, up):
+    """Carte video : vignette cliquable (lecteur charge au clic), titre, description."""
+    t = v[lang]
+    minutes = round(v["secondes"] / 60)
+    duree = "%d:%02d" % (v["secondes"] // 60, v["secondes"] % 60)
+    if lang == "ar":
+        label = "تشغيل الفيديو: " + t["titre"]
+        meta = 'فيديو · %d دقيقة · %s · <a href="%s" target="_blank" rel="noopener">«37 درجة»</a>' % (
+            minutes, ar_date(v["date"]), MEDIA_URL)
+    else:
+        label = "Lire la vidéo : " + t["titre"]
+        meta = 'Vidéo · %d min · %s · <a href="%s" target="_blank" rel="noopener">37° degrés</a>' % (
+            minutes, fr_date(v["date"]), MEDIA_URL)
+    return f"""      <figure class="video">
+        <a class="video-facade" href="https://www.youtube.com/watch?v={v['id']}" data-yt="{v['id']}"
+           aria-label="{html.escape(label)}" target="_blank" rel="noopener">
+          <img src="{up}assets/img/{v['img']}" alt="" loading="lazy" width="960" height="540">
+          <span class="video-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></span>
+          <span class="video-duree" dir="ltr">{duree}</span>
+        </a>
+        <figcaption>
+          <p class="meta">{meta}</p>
+          <h3>{t['titre']}</h3>
+          <p>{t['desc']}</p>
+        </figcaption>
+      </figure>"""
+
+
+def video_ld(v, lang):
+    """Donnees structurees VideoObject (resultats video de Google)."""
+    t = v[lang]
+    return '<script type="application/ld+json">\n%s\n</script>\n' % json.dumps({
+        "@context": "https://schema.org",
+        "@type": "VideoObject",
+        "name": t["titre"],
+        "description": t["desc"],
+        "thumbnailUrl": ["%s/assets/img/%s" % (SITE_URL, v["img"])],
+        "uploadDate": v["upload"],
+        "duration": "PT%dM%dS" % (v["secondes"] // 60, v["secondes"] % 60),
+        "embedUrl": "https://www.youtube-nocookie.com/embed/" + v["id"],
+        "url": "https://www.youtube.com/watch?v=" + v["id"],
+        "publisher": {"@type": "Organization", "name": "37° degrés", "url": MEDIA_URL},
+    }, ensure_ascii=False, indent=1)
+
+
+def video_blocks(slug, lang, up):
+    """Blocs video d'un article (haut, bas) et leurs donnees structurees."""
+    haut = bas = ld = ""
+    for v in VIDEOS.values():
+        if v["article"] != slug:
+            continue
+        bloc = f"""  <div class="narrow">
+    <aside class="article-video">
+      <p class="article-video-intro">{v[lang]['intro']}</p>
+{video_card(v, lang, up)}
+    </aside>
+  </div>
+"""
+        if v["position"] == "haut":
+            haut += bloc
+        else:
+            bas += bloc
+        ld += video_ld(v, lang)
+    return haut, bas, ld
+
+
+def section_videos(lang, up):
+    """Section « En video » des pages d'accueil."""
+    if lang == "ar":
+        head_ = (f'<p class="eyebrow">فيديو</p>\n      <h2>{DOC_AR} تجيب عن أسئلة «37 درجة»</h2>\n'
+                 f'      <p>لقاءان مصوران مع منبر الصحة الجزائري '
+                 f'<a href="{MEDIA_URL}" target="_blank" rel="noopener">«37 درجة»</a>.</p>')
+    else:
+        head_ = ('<p class="eyebrow">En vidéo</p>\n      <h2>Le Dr Chikhi répond aux questions de 37° degrés</h2>\n'
+                 f'      <p>Deux entretiens filmés pour le média santé algérien '
+                 f'<a href="{MEDIA_URL}" target="_blank" rel="noopener">37° degrés</a>.</p>')
+    cards = "\n".join(video_card(v, lang, up) for v in VIDEOS.values())
+    return f"""
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      {head_}
+    </div>
+    <div class="videos">
+{cards}
+    </div>
+  </div>
+</section>
+"""
+
+
 # L'accueil met en avant les derniers articles du Dr Chikhi elle-meme : la section
 # s'intitule « Articles du Dr ... » et doit porter sur la psychiatrie.
 recent = "\n".join(post_card(a) for a in [x for x in articles if not x.get("author")][:3])
@@ -410,7 +561,8 @@ index = head(
     "Stress, anxiété, dépression, troubles bipolaires, épilepsie et céphalées.",
     "index.html",
     extra=(f'<script type="application/ld+json">\n{SCHEMA}\n</script>\n'
-           f'<script type="application/ld+json">\n{WEBSITE_SCHEMA}\n</script>\n'),
+           f'<script type="application/ld+json">\n{WEBSITE_SCHEMA}\n</script>\n'
+           + video_ld(VIDEOS["depression"], "fr") + video_ld(VIDEOS["addiction"], "fr")),
 ) + header("index.html") + f"""
 <section class="hero">
   <img class="hero-bg" src="assets/img/2017_12_intestinCerveau.jpg" alt="" width="1500" height="630" fetchpriority="high">
@@ -523,7 +675,7 @@ index = head(
     <p style="margin-top:2.2rem"><a class="btn btn-outline" href="articles.html">Tous les articles</a></p>
   </div>
 </section>
-
+{section_videos('fr', '')}
 <section class="cta-band">
   <div class="wrap">
     <h2>Prendre un rendez-vous</h2>
@@ -954,6 +1106,7 @@ write("contact.html", contact)
 # --------------------------------------------------------------- articles
 
 for i, a in enumerate(articles):
+    v_haut, v_bas, v_ld = video_blocks(a["slug"], "fr", "../")
     # Auteur : le Dr Chikhi par defaut ; certains articles sont d'une autre plume.
     auteur = a.get("author") or DOC
     signature = "%s, %s" % (auteur, a["author_role"]) if a.get("author_role") else auteur
@@ -995,7 +1148,7 @@ for i, a in enumerate(articles):
         "articles/" + a["slug"] + ".html",
         depth=1,
         og_image="assets/img/" + a["image"] if a["image"] else "assets/img/2017_12_intestinCerveau.jpg",
-        extra=f'<script type="application/ld+json">\n{ld}\n</script>\n',
+        extra=f'<script type="application/ld+json">\n{ld}\n</script>\n' + v_ld,
     ) + header("articles.html", depth=1,
                switch_to=("../ar/articles/%s.html" % a["slug"]) if a["slug"] in AR_ARTICLES else None) + f"""
 <article>
@@ -1007,12 +1160,12 @@ for i, a in enumerate(articles):
     </div>
   </div>
 {hero_img}
-  <div class="prose">
+{v_haut}  <div class="prose">
     <div class="narrow">
 {a['body']}
     </div>
   </div>
-  <div class="narrow" style="padding-bottom:3.5rem">
+{v_bas}  <div class="narrow" style="padding-bottom:3.5rem">
     <div class="callout">
       <p>
         <strong>Ce site ne peut remplacer une consultation.</strong> Pour un avis adapté à votre situation,

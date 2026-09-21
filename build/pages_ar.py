@@ -218,8 +218,10 @@ def build(g):
     <p style="margin-top:2.2rem"><a class="btn btn-outline" href="articles.html">جميع المقالات</a></p>
   </div>
 </section>
-""" + cta("احجزوا موعدا", "يمكنكم الاتصال بنا هاتفيا. " + ASSISTANTE, "معلومات الاتصال", "contact.html"),
-         extra='<script type="application/ld+json">\n%s\n</script>\n' % g["SCHEMA"])
+""" + g["section_videos"]("ar", "../") + cta("احجزوا موعدا", "يمكنكم الاتصال بنا هاتفيا. " + ASSISTANTE, "معلومات الاتصال", "contact.html"),
+         extra=('<script type="application/ld+json">\n%s\n</script>\n' % g["SCHEMA"]
+                + g["video_ld"](g["VIDEOS"]["depression"], "ar")
+                + g["video_ld"](g["VIDEOS"]["addiction"], "ar")))
 
     # ------------------------------------------------------------ cabinet
     page("cabinet.html",
@@ -556,6 +558,7 @@ def build(g):
     traduits = [a for a in g["articles"] if a["slug"] in TRAD]
     for i, a in enumerate(traduits):
         slug, m = a["slug"], META[a["slug"]]
+        v_haut, v_bas, v_ld = g["video_blocks"](slug, "ar", "../../")
         older = traduits[i + 1] if i + 1 < len(traduits) else None
         newer = traduits[i - 1] if i > 0 else None
         nav = "\n".join([
@@ -596,12 +599,12 @@ def build(g):
     </div>
   </div>
 {hero}
-  <div class="prose">
+{v_haut}  <div class="prose">
     <div class="narrow">
 {TRAD[slug]}
     </div>
   </div>
-  <div class="narrow" style="padding-bottom:3.5rem">
+{v_bas}  <div class="narrow" style="padding-bottom:3.5rem">
     <div class="callout">
       <p>
         <strong>هذا الموقع لا يغني عن الاستشارة الطبية.</strong> للحصول على رأي يناسب حالتكم،
@@ -617,6 +620,6 @@ def build(g):
         write("ar/articles/%s.html" % slug,
               head(m["seo_title"], m["description"], "ar/articles/%s.html" % slug, depth=2,
                    og_image="assets/img/" + a["image"] if a["image"] else "assets/img/2017_12_intestinCerveau.jpg",
-                   extra='<script type="application/ld+json">\n%s\n</script>\n' % ld)
+                   extra='<script type="application/ld+json">\n%s\n</script>\n' % ld + v_ld)
               + header("articles.html", depth=2, lang="ar", switch_to="../../articles/%s.html" % slug)
               + body + footer(depth=2, lang="ar"))

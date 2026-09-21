@@ -286,6 +286,37 @@ figure.media { margin: 0; }
   display: flex; flex-wrap: wrap; gap: .6rem 1.5rem; justify-content: space-between; font-size: .85rem; color: #8aa5bb;
 }
 
+/* ---------- Videos : vignette, puis lecteur YouTube au clic ---------- */
+.videos { display: grid; gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.video { margin: 0; }
+.video-facade, .video-frame {
+  position: relative; display: block; width: 100%; aspect-ratio: 16 / 9;
+  border: 0; border-radius: var(--radius); overflow: hidden; background: #0b1c2a; box-shadow: var(--shadow);
+}
+.video-facade img { width: 100%; height: 100%; object-fit: cover; transition: transform .35s, opacity .35s; }
+.video-facade:hover img { transform: scale(1.03); opacity: .88; }
+.video-play {
+  position: absolute; inset: 0; margin: auto; width: 68px; height: 68px; border-radius: 50%;
+  display: grid; place-items: center; background: rgba(18,49,74,.86); transition: background .2s, transform .2s;
+}
+/* le triangle pointe toujours a droite, y compris en arabe : decalage optique physique */
+.video-play svg { width: 28px; height: 28px; margin-left: 4px; fill: #fff; }
+.video-facade:hover .video-play, .video-facade:focus-visible .video-play { background: var(--primary); transform: scale(1.07); }
+.video-duree {
+  position: absolute; right: .6rem; bottom: .6rem; padding: .12rem .45rem; border-radius: 4px;
+  background: rgba(0,0,0,.75); color: #fff; font-size: .8rem; font-weight: 600;
+}
+.video figcaption { margin-top: 1rem; }
+.video figcaption h3 { margin-bottom: .45rem; }
+.video figcaption p { color: var(--ink-soft); font-size: .95rem; }
+.video figcaption p:last-child { margin-bottom: 0; }
+.video .meta a { color: inherit; }
+.article-video {
+  margin: 2rem 0 0; padding: 1.4rem 1.4rem 1.6rem;
+  background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius);
+}
+.article-video-intro { color: var(--ink-soft); margin-bottom: 1.1rem; }
+
 /* ---------- Bouton de langue ---------- */
 .topbar .lang-switch {
   margin-inline-start: .9rem; padding: .12rem .7rem;
