@@ -254,7 +254,9 @@ cards = "\n".join(
         </div>""" for ic, t, d in SERVICES)
 
 demarche = "\n".join(f"          <li>{x}</li>" for x in DEMARCHE)
-recent = "\n".join(post_card(a) for a in articles[:3])
+# L'accueil met en avant les derniers articles du Dr Chikhi elle-meme : la section
+# s'intitule « Articles du Dr ... » et doit porter sur la psychiatrie.
+recent = "\n".join(post_card(a) for a in [x for x in articles if not x.get("author")][:3])
 
 SCHEMA = json.dumps({
     "@context": "https://schema.org",
@@ -292,7 +294,7 @@ WEBSITE_SCHEMA = json.dumps({
 }, ensure_ascii=False, indent=1)
 
 index = head(
-    f"{DOC} — Neuropsychiatre à Draria, Alger",
+    f"Psychiatre à Draria, Alger — {DOC}",
     "Cabinet de neuropsychiatrie, psychothérapie et relaxation thérapeutique à Draria, Alger. "
     "Stress, anxiété, dépression, troubles bipolaires, épilepsie et céphalées.",
     "index.html",
@@ -841,6 +843,12 @@ write("contact.html", contact)
 # --------------------------------------------------------------- articles
 
 for i, a in enumerate(articles):
+    # Auteur : le Dr Chikhi par defaut ; certains articles sont d'une autre plume.
+    auteur = a.get("author") or DOC
+    signature = "%s, %s" % (auteur, a["author_role"]) if a.get("author_role") else auteur
+    person = {"@type": "Person", "name": auteur}
+    if a.get("author_role"):
+        person["jobTitle"] = a["author_role"].capitalize()
     prev_a = articles[i + 1] if i + 1 < len(articles) else None
     next_a = articles[i - 1] if i > 0 else None
     nav_parts = []
@@ -861,7 +869,7 @@ for i, a in enumerate(articles):
         "@type": "Article",
         "headline": a["title"],
         "datePublished": a["date"],
-        "author": {"@type": "Person", "name": DOC},
+        "author": person,
         "publisher": {"@type": "Organization", "name": "Cabinet du " + DOC},
         "mainEntityOfPage": f"{SITE_URL}/articles/{a['slug']}.html",
     }, ensure_ascii=False, indent=1)
@@ -878,7 +886,7 @@ for i, a in enumerate(articles):
   <div class="article-head">
     <div class="narrow">
       <p class="breadcrumb"><a href="../index.html">Accueil</a> / <a href="../articles.html">Articles</a></p>
-      <p class="meta">{fr_date(a['date'])} · {DOC}</p>
+      <p class="meta">{fr_date(a['date'])} · {html.escape(signature)}</p>
       <h1>{html.escape(a['title'])}</h1>
     </div>
   </div>
