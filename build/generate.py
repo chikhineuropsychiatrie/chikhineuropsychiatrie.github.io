@@ -861,13 +861,17 @@ for i, a in enumerate(articles):
     nav_html = "\n".join(nav_parts)
 
     hero_img = (f"""  <div class="wrap article-hero">
-    <img src="../assets/img/{a['image']}" alt="" width="1200" height="440">
+    <img src="../assets/img/{a['image']}" alt="{html.escape(a.get('alt', ''))}" width="1200" height="440">
   </div>""" if a["image"] else "")
 
     ld = json.dumps({
         "@context": "https://schema.org",
         "@type": "Article",
         "headline": a["title"],
+        "description": a.get("description") or a["excerpt"][:160],
+        "keywords": a.get("keywords", []),
+        "inLanguage": "fr",
+        **({"image": "%s/assets/img/%s" % (SITE_URL, a["image"])} if a["image"] else {}),
         "datePublished": a["date"],
         "author": person,
         "publisher": {"@type": "Organization", "name": "Cabinet du " + DOC},
@@ -875,8 +879,8 @@ for i, a in enumerate(articles):
     }, ensure_ascii=False, indent=1)
 
     page = head(
-        a["title"] + " — " + DOC,
-        a["excerpt"][:160],
+        a.get("seo_title") or a["title"] + " — " + DOC,
+        a.get("description") or a["excerpt"][:160],
         "articles/" + a["slug"] + ".html",
         depth=1,
         og_image="assets/img/" + a["image"] if a["image"] else "assets/img/2017_12_intestinCerveau.jpg",
