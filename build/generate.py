@@ -88,9 +88,11 @@ WA_NOTE = {
     "ar": "لحجز المواعيد فقط، دون أسئلة طبية عبر الرسائل.",
 }
 
-FONTS = {
-    "fr": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:wght@500;600&display=swap",
-    "ar": "https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@500;600&family=Noto+Sans+Arabic:wght@400;500;600&display=swap",
+# Polices auto-hebergees (assets/fonts, declarees en tete de style.css). On precharge
+# celles du texte courant et des titres ; les autres ne se chargent qu'au besoin.
+POLICES_PRECHARGEES = {
+    "fr": ("inter-latin", "lora-latin"),
+    "ar": ("noto-sans-arabic-arabic", "noto-naskh-arabic-arabic"),
 }
 
 UI = {
@@ -160,7 +162,8 @@ def canon_path(page):
     return page[:-len("index.html")] if page.endswith("index.html") else page
 
 
-def head(title, desc, page, depth=0, og_image="assets/img/2017_12_intestinCerveau.jpg", extra=""):
+def head(title, desc, page, depth=0, og_image="assets/img/2017_12_intestinCerveau.jpg", extra="", balise_base=""):
+    # balise_base : doit preceder tout lien relatif (feuille de style, polices), sinon ignore pour eux.
     lang = "ar" if page.startswith("ar/") else "fr"
     up = "../" * depth
     canon = "%s/%s" % (SITE_URL, canon_path(page))
@@ -179,10 +182,12 @@ def head(title, desc, page, depth=0, og_image="assets/img/2017_12_intestinCervea
                 % (fr_u, ar_u, fr_u, "fr_FR" if lang == "ar" else "ar_DZ"))
     rtl = ' dir="rtl"' if lang == "ar" else ""
     locale = "ar_DZ" if lang == "ar" else "fr_FR"
+    polices = "".join('<link rel="preload" href="%sassets/fonts/%s.woff2" as="font" type="font/woff2" crossorigin>\n'
+                      % (up, p) for p in POLICES_PRECHARGEES[lang])
     return f"""<!DOCTYPE html>
 <html lang="{lang}"{rtl}>
 <head>
-<meta charset="utf-8">
+<meta charset="utf-8">{balise_base}
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)}</title>
 <meta name="description" content="{html.escape(desc)}">
@@ -200,10 +205,7 @@ def head(title, desc, page, depth=0, og_image="assets/img/2017_12_intestinCervea
 <link rel="icon" type="image/png" sizes="96x96" href="{up}assets/img/icon-96.png">
 <link rel="icon" type="image/png" sizes="192x192" href="{up}assets/img/icon-192.png">
 <link rel="apple-touch-icon" href="{up}assets/img/icon-192.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="{FONTS[lang]}">
-<link rel="stylesheet" href="{up}assets/css/style.css?v={ASSET_V['css']}">
+{polices}<link rel="stylesheet" href="{up}assets/css/style.css?v={ASSET_V['css']}">
 {extra}</head>
 <body>
 <a class="skip" href="#contenu">{UI[lang]["skip"]}</a>
@@ -1299,7 +1301,7 @@ write("robots.txt", "User-agent: *\nAllow: /\nDisallow: /build/\n\nSitemap: %s/s
 write(".nojekyll", "")
 
 write("404.html", head("Page introuvable — " + DOC, "La page demandée n’existe pas.", "404.html",
-      extra='<meta name="robots" content="noindex">\n<base href="/">\n')
+      extra='<meta name="robots" content="noindex">\n', balise_base='\n<base href="/">')
       + header("") + f"""
 <section>
   <div class="narrow" style="text-align:center;padding:3rem 0">
