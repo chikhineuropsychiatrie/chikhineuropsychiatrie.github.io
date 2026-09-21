@@ -49,14 +49,14 @@ NAV = [
 ]
 
 # ---- Version arabe : pages traduites sous /ar/ (voir build/pages_ar.py).
-# Les articles restent en francais ; le menu arabe renvoie vers leur liste.
+# Les articles traduits sont sous /ar/articles/ (build/articles_ar/).
 AR_PAGES = ["index.html", "cabinet.html", "horaires.html", "cursus.html", "contact.html"]
 NAV_AR = [
     ("index.html",       "الرئيسية"),
     ("cabinet.html",     "العيادة"),
     ("horaires.html",    "أوقات العمل"),
     ("cursus.html",      "المسار المهني"),
-    ("../articles.html", "المقالات"),
+    ("articles.html",    "المقالات"),
     ("contact.html",     "اتصل بنا"),
 ]
 DOC_AR   = "الدكتورة ف. شيخي بن قوقام"
@@ -188,11 +188,11 @@ def head(title, desc, page, depth=0, og_image="assets/img/2017_12_intestinCervea
 <a class="skip" href="#contenu">{UI[lang]["skip"]}</a>
 """
 
-def header(page, depth=0, lang="fr"):
+def header(page, depth=0, lang="fr", switch_to=None):
     ui = UI[lang]
     up = "../" * depth
     # Les liens du menu arabe sont relatifs a /ar/ ; ceux du menu francais, a la page.
-    navp = "" if lang == "ar" else up
+    navp = "../" * (depth - 1) if lang == "ar" else up
     items = []
     for href, label in (NAV_AR if lang == "ar" else NAV):
         cur = ' aria-current="page"' if href == page else ""
@@ -205,6 +205,8 @@ def header(page, depth=0, lang="fr"):
         # Page sans equivalent arabe (articles, 404) : on renvoie vers l'accueil arabe.
         switch_href, other = up + "ar/" + (page if page in AR_PAGES else "index.html"), "ar"
         addr, tel, name = ADDR2, TEL_DISPLAY, DOC
+    if switch_to:   # article : on renvoie vers sa traduction plutot que vers la liste
+        switch_href = switch_to
     return f"""<div class="topbar">
   <div class="wrap">
     <span>{icon('map', 15)} {addr}</span>
@@ -240,7 +242,7 @@ def header(page, depth=0, lang="fr"):
 def footer(depth=0, lang="fr"):
     ui = UI[lang]
     up = "../" * depth
-    navp = "" if lang == "ar" else up
+    navp = "../" * (depth - 1) if lang == "ar" else up
     nav_links = "\n".join(f'          <li><a href="{navp}{h}">{l}</a></li>'
                           for h, l in (NAV_AR if lang == "ar" else NAV))
     hours = "\n".join("          <li>%s</li>" % h for h in ui["f_hours_list"])
@@ -306,6 +308,9 @@ def write(path, content):
 # --------------------------------------------------------------- donnees
 
 articles = json.load(open(os.path.join(ROOT, "build/articles.json"), encoding="utf-8"))
+AR_ARTICLES = [a["slug"] for a in articles
+               if os.path.exists(os.path.join(ROOT, "build", "articles_ar", a["slug"] + ".html"))]
+AR_PAGES += ["articles.html"] + ["articles/%s.html" % s for s in AR_ARTICLES]
 
 SERVICES = [
     ("brain", "Neuropsychiatrie",
@@ -991,7 +996,8 @@ for i, a in enumerate(articles):
         depth=1,
         og_image="assets/img/" + a["image"] if a["image"] else "assets/img/2017_12_intestinCerveau.jpg",
         extra=f'<script type="application/ld+json">\n{ld}\n</script>\n',
-    ) + header("articles.html", depth=1) + f"""
+    ) + header("articles.html", depth=1,
+               switch_to=("../ar/articles/%s.html" % a["slug"]) if a["slug"] in AR_ARTICLES else None) + f"""
 <article>
   <div class="article-head">
     <div class="narrow">

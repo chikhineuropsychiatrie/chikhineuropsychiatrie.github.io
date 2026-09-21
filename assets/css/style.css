@@ -325,3 +325,6 @@ html[dir="rtl"] [lang="fr"] h3 { font-family: "Lora", Georgia, serif; }
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
+
+/* Mention de traduction, en tete des articles arabes */
+.translation-note { margin: .4rem 0 0; font-size: .9rem; color: var(--ink-faint); }

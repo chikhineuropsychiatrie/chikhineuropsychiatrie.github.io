@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
-"""Version arabe du site : accueil, cabinet, horaires, cursus, contact, sous /ar/.
+"""Version arabe du site, sous /ar/ : pages pratiques et articles traduits.
 
 Appele par generate.py, qui lui passe ses globales (gabarits, constantes).
-Les articles ne sont pas traduits : un texte medical publie sous le nom du
-Dr Chikhi doit etre relu par elle avant publication. Le menu arabe renvoie
-vers la liste des articles en francais.
+Articles : traductions dans build/articles_ar/<slug>.html (corps HTML) et
+build/articles_ar/meta.json (titre, titre de recherche, description, mots-cles,
+texte alternatif). Chaque traduction renvoie vers son original francais.
 
 Conventions : usage algerien (« التكفل » pour la prise en charge, mois
 maghrebins جانفي/فيفري/ماي...), noms de lieux sous leur forme courante.
 Numeros, e-mail et adresse officielle en caracteres latins, forces de gauche
 a droite (TEL_LTR, EMAIL_LTR, ADDR1_LTR).
 """
-import json
+import json, os
 
 
 def build(g):
@@ -75,12 +75,44 @@ def build(g):
                      "اتصلوا بمصالح الاستعجالات أو توجهوا إلى أقرب مستشفى.")
     HEURES = "من 08:00 إلى 12:00 ومن 13:00 إلى 17:30"
 
+    # ------------------------------------------------------------ articles traduits
+    AR_DIR = os.path.join(g["ROOT"], "build", "articles_ar")
+    META = json.load(open(os.path.join(AR_DIR, "meta.json"), encoding="utf-8"))
+    TRAD = {s: open(os.path.join(AR_DIR, s + ".html"), encoding="utf-8").read() for s in g["AR_ARTICLES"]}
+    MOIS_AR = ["جانفي", "فيفري", "مارس", "أفريل", "ماي", "جوان", "جويلية", "أوت",
+               "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"]
+    AUTEURS_AR = {"Roza": ("روزا", "صيدلانية")}
+
+    def ar_date(iso):
+        y, m, d = (int(x) for x in iso.split("-"))
+        return "%d %s %d" % (d, MOIS_AR[m - 1], y)
+
+    def signature(a):
+        if a.get("author"):
+            return "%s، %s" % AUTEURS_AR[a["author"]]
+        return DOC
+
+    def card(a):
+        """Carte d'article depuis /ar/ : traduite si possible, sinon la carte francaise, marquee comme telle."""
+        if a["slug"] not in TRAD:
+            return g["post_card"](a, 1).replace('<article class="post-card">',
+                                                '<article class="post-card" lang="fr" dir="ltr">')
+        m, href = META[a["slug"]], "articles/%s.html" % a["slug"]
+        img = (f'<div class="thumb"><img src="../assets/img/{a["image"]}" alt="" loading="lazy" '
+               f'width="600" height="375"></div>' if a["image"] else "")
+        return f"""        <article class="post-card">
+{img}
+          <div class="body">
+            <p class="meta">{ar_date(a["date"])}</p>
+            <h3><a href="{href}">{m["title"]}</a></h3>
+            <p>{m["description"]}</p>
+            <a class="more" href="{href}">اقرأ المقال ←</a>
+          </div>
+        </article>"""
+
     # ------------------------------------------------------------ accueil
     doctor_articles = [a for a in g["articles"] if not a.get("author")][:3]
-    recent = "\n".join(
-        g["post_card"](a, 1).replace('<article class="post-card">',
-                                     '<article class="post-card" lang="fr" dir="ltr">')
-        for a in doctor_articles)
+    recent = "\n".join(card(a) for a in doctor_articles)
 
     page("index.html",
          f"طبيب نفسي بالدرارية — {DOC}",
@@ -178,12 +210,12 @@ def build(g):
     <div class="section-head">
       <p class="eyebrow">قراءات</p>
       <h2>مقالات {DOC}</h2>
-      <p>شروحات حول الاضطرابات النفسية والعصبية. المقالات متوفرة باللغة الفرنسية.</p>
+      <p>شروحات حول الاضطرابات النفسية والعصبية.</p>
     </div>
     <div class="posts">
 {recent}
     </div>
-    <p style="margin-top:2.2rem"><a class="btn btn-outline" href="../articles.html">جميع المقالات (بالفرنسية)</a></p>
+    <p style="margin-top:2.2rem"><a class="btn btn-outline" href="articles.html">جميع المقالات</a></p>
   </div>
 </section>
 """ + cta("احجزوا موعدا", "يمكنكم الاتصال بنا هاتفيا. " + ASSISTANTE, "معلومات الاتصال", "contact.html"),
@@ -496,3 +528,95 @@ def build(g):
   </div>
 </section>
 """)
+
+    # ------------------------------------------------------------ liste des articles
+    page("articles.html",
+         f"المقالات — {DOC}",
+         f"مقالات {DOC} حول الاكتئاب، العلاج النفسي، التنويم الإيحائي، الاسترخاء، "
+         "الأدوية النفسية والصحة النفسية.",
+         f"""
+<div class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">قراءات</p>
+    <h1>المقالات</h1>
+    <p>شروحات حول الاضطرابات النفسية والعصبية، مترجمة عن الأصل الفرنسي.</p>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <div class="posts">
+{chr(10).join(card(a) for a in g["articles"])}
+    </div>
+  </div>
+</section>
+""")
+
+    # ------------------------------------------------------------ pages des articles
+    traduits = [a for a in g["articles"] if a["slug"] in TRAD]
+    for i, a in enumerate(traduits):
+        slug, m = a["slug"], META[a["slug"]]
+        older = traduits[i + 1] if i + 1 < len(traduits) else None
+        newer = traduits[i - 1] if i > 0 else None
+        nav = "\n".join([
+            f'      <a href="{older["slug"]}.html">→ {META[older["slug"]]["title"]}</a>' if older else "      <span></span>",
+            f'      <a href="{newer["slug"]}.html">{META[newer["slug"]]["title"]} ←</a>' if newer else "",
+        ])
+        hero = (f"""  <div class="wrap article-hero">
+    <img src="../../assets/img/{a['image']}" alt="{m['alt']}" width="1200" height="440">
+  </div>""" if a["image"] else "")
+        auteur = ({"@type": "Person", "name": a["author"], "alternateName": AUTEURS_AR[a["author"]][0],
+                   "jobTitle": a["author_role"].capitalize()} if a.get("author") else
+                  {"@type": "Person", "name": g["DOC"], "alternateName": DOC})
+        ld = json.dumps({
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "headline": m["title"],
+            "description": m["description"],
+            "keywords": m["keywords"],
+            "inLanguage": "ar",
+            **({"image": "%s/assets/img/%s" % (g["SITE_URL"], a["image"])} if a["image"] else {}),
+            "datePublished": a["date"],
+            "author": auteur,
+            "publisher": {"@type": "Organization", "name": "Cabinet du " + g["DOC"]},
+            "mainEntityOfPage": "%s/ar/articles/%s.html" % (g["SITE_URL"], slug),
+            "translationOfWork": {"@id": "%s/articles/%s.html" % (g["SITE_URL"], slug)},
+        }, ensure_ascii=False, indent=1)
+        body = f"""
+<article>
+  <div class="article-head">
+    <div class="narrow">
+      <p class="breadcrumb"><a href="../index.html">الرئيسية</a> / <a href="../articles.html">المقالات</a></p>
+      <p class="meta">{ar_date(a['date'])} · {signature(a)}</p>
+      <h1>{m['title']}</h1>
+      <p class="translation-note">
+        ترجمة عن الأصل الفرنسي —
+        <a href="../../articles/{slug}.html" lang="fr" hreflang="fr">Lire l’original en français</a>
+      </p>
+    </div>
+  </div>
+{hero}
+  <div class="prose">
+    <div class="narrow">
+{TRAD[slug]}
+    </div>
+  </div>
+  <div class="narrow" style="padding-bottom:3.5rem">
+    <div class="callout">
+      <p>
+        <strong>هذا الموقع لا يغني عن الاستشارة الطبية.</strong> للحصول على رأي يناسب حالتكم،
+        احجزوا موعدا على <a class="tel-link" href="tel:{TEL_HREF}">{TEL}</a>.
+      </p>
+    </div>
+    <nav class="article-nav" aria-label="المقال السابق والتالي">
+{nav}
+    </nav>
+  </div>
+</article>
+"""
+        write("ar/articles/%s.html" % slug,
+              head(m["seo_title"], m["description"], "ar/articles/%s.html" % slug, depth=2,
+                   og_image="assets/img/" + a["image"] if a["image"] else "assets/img/2017_12_intestinCerveau.jpg",
+                   extra='<script type="application/ld+json">\n%s\n</script>\n' % ld)
+              + header("articles.html", depth=2, lang="ar", switch_to="../../articles/%s.html" % slug)
+              + body + footer(depth=2, lang="ar"))
