@@ -52,11 +52,13 @@ img { max-width: 100%; height: auto; display: block; }
 .wrap { width: min(100% - 2.5rem, var(--wrap)); margin-inline: auto; }
 .narrow { width: min(100% - 2.5rem, 760px); margin-inline: auto; }
 
+/* Cache au-dessus de la page plutot qu'a -9999px sur le cote : en arabe
+   (droite a gauche), un decalage lateral rend la page defilable sur 10 000 px. */
 .skip {
-  position: absolute; left: -9999px; top: 0; z-index: 100;
+  position: absolute; top: 0; left: 0; z-index: 100; transform: translateY(-120%);
   background: var(--primary); color: #fff; padding: .7rem 1.1rem; border-radius: 0 0 8px 0;
 }
-.skip:focus { left: 0; }
+.skip:focus { transform: none; }
 
 /* ---------- Bandeau + en-tete ---------- */
 .topbar {
@@ -283,6 +285,39 @@ figure.media { margin: 0; }
   margin-top: 2.6rem; padding-top: 1.4rem; border-top: 1px solid rgba(255,255,255,.12);
   display: flex; flex-wrap: wrap; gap: .6rem 1.5rem; justify-content: space-between; font-size: .85rem; color: #8aa5bb;
 }
+
+/* ---------- Bouton de langue ---------- */
+.topbar .lang-switch {
+  margin-inline-start: .9rem; padding: .12rem .7rem;
+  border: 1px solid rgba(255,255,255,.4); border-radius: 999px;
+  font-weight: 600; white-space: nowrap;
+}
+.topbar .lang-switch:hover { background: rgba(255,255,255,.14); text-decoration: none; }
+
+/* ---------- Version arabe (droite a gauche) ---------- */
+html[dir="rtl"] {
+  --serif: "Noto Naskh Arabic", "Lora", Georgia, serif;
+  --sans:  "Noto Sans Arabic", "Inter", system-ui, sans-serif;
+}
+/* L'espacement entre lettres casse les liaisons de l'ecriture arabe. */
+html[dir="rtl"], html[dir="rtl"] * { letter-spacing: 0 !important; }
+html[dir="rtl"] body { font-size: 18px; line-height: 1.9; }
+html[dir="rtl"] h1, html[dir="rtl"] h2, html[dir="rtl"] h3 { line-height: 1.45; }
+html[dir="rtl"] .skip { left: auto; right: 0; border-radius: 0 0 0 8px; }
+html[dir="rtl"] .hero::after {
+  background: linear-gradient(255deg, rgba(18,49,74,.95) 0%, rgba(18,49,74,.86) 42%, rgba(18,49,74,.52) 100%);
+}
+html[dir="rtl"] .nav .btn-rdv { margin-left: 0; margin-right: .5rem; }
+@media (max-width: 900px) { html[dir="rtl"] .nav .btn-rdv { margin: .6rem 0 0; } }
+html[dir="rtl"] .list-check li { padding-left: 0; padding-right: 1.75rem; }
+html[dir="rtl"] .list-check li::before { left: auto; right: 0; }
+html[dir="rtl"] .hours th, html[dir="rtl"] .hours td, html[dir="rtl"] .hours caption { text-align: right; }
+html[dir="rtl"] .callout { border-left: 1px solid #cfe2f1; border-right: 4px solid var(--primary); }
+html[dir="rtl"] .prose ul, html[dir="rtl"] .prose ol { padding-left: 0; padding-right: 1.3em; }
+html[dir="rtl"] .prose blockquote { padding: .3em 1.4em .3em 0; border-left: 0; border-right: 3px solid var(--accent); }
+/* Cartes d'articles en francais sur une page arabe */
+html[dir="rtl"] [lang="fr"] { font-family: "Inter", system-ui, sans-serif; }
+html[dir="rtl"] [lang="fr"] h3 { font-family: "Lora", Georgia, serif; }
 
 /* ---------- Divers ---------- */
 .tel-link { white-space: nowrap; }

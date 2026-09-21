@@ -48,6 +48,71 @@ NAV = [
     ("contact.html",  "Contact"),
 ]
 
+# ---- Version arabe : pages traduites sous /ar/ (voir build/pages_ar.py).
+# Les articles restent en francais ; le menu arabe renvoie vers leur liste.
+AR_PAGES = ["index.html", "cabinet.html", "horaires.html", "cursus.html", "contact.html"]
+NAV_AR = [
+    ("index.html",       "الرئيسية"),
+    ("cabinet.html",     "العيادة"),
+    ("horaires.html",    "أوقات العمل"),
+    ("cursus.html",      "المسار المهني"),
+    ("../articles.html", "المقالات"),
+    ("contact.html",     "اتصل بنا"),
+]
+DOC_AR   = "الدكتورة شيخي"
+ADDR2_AR = "الدرارية، الجزائر العاصمة"
+# Numeros et adresses latines forces de gauche a droite : dans un texte arabe,
+# « 05 49 14 36 48 » s'afficherait sinon groupes inverses.
+TEL_LTR   = '<span dir="ltr">%s</span>' % TEL_DISPLAY
+ADDR1_LTR = '<span dir="ltr">%s</span>' % ADDR1
+EMAIL_LTR = '<span dir="ltr">%s</span>' % EMAIL
+
+FONTS = {
+    "fr": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:wght@500;600&display=swap",
+    "ar": "https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@500;600&family=Noto+Sans+Arabic:wght@400;500;600&display=swap",
+}
+
+UI = {
+    "fr": {
+        "skip": "Aller au contenu",
+        "rdv_top": "Prendre rendez-vous&nbsp;:",
+        "brand_sub": "Neuropsychiatrie · Draria",
+        "menu": "Ouvrir le menu",
+        "nav_label": "Navigation principale",
+        "rdv_btn": "Rendez-vous",
+        "switch": "العربية",
+        "f_cabinet": "Le cabinet",
+        "f_tag": "Prise en charge des troubles psychologiques, psychiatriques et neurologiques.",
+        "f_nav": "Navigation",
+        "f_coord": "Coordonnées",
+        "f_hours": "Horaires",
+        "f_hours_list": ["Samedi – Jeudi&nbsp;: 08:00 – 17:30", "Pause&nbsp;: 12:00 – 13:00",
+                         "Mardi &amp; vendredi&nbsp;: fermé"],
+        "f_detail": "Voir le détail",
+        "f_rights": "© {year} Cabinet du {doc}. Tous droits réservés.",
+        "f_disclaimer": "Ce site ne remplace pas une consultation médicale.",
+    },
+    "ar": {
+        "skip": "انتقل إلى المحتوى",
+        "rdv_top": "لحجز موعد:",
+        "brand_sub": "الطب العصبي النفسي · الدرارية",
+        "menu": "فتح القائمة",
+        "nav_label": "القائمة الرئيسية",
+        "rdv_btn": "احجز موعدا",
+        "switch": "Français",
+        "f_cabinet": "العيادة",
+        "f_tag": "التكفل بالاضطرابات النفسية والعقلية والعصبية.",
+        "f_nav": "روابط",
+        "f_coord": "معلومات الاتصال",
+        "f_hours": "أوقات العمل",
+        "f_hours_list": ["من السبت إلى الخميس: من 08:00 إلى 17:30", "الاستراحة: من 12:00 إلى 13:00",
+                         "الثلاثاء والجمعة: مغلق"],
+        "f_detail": "التفاصيل",
+        "f_rights": "© {year} عيادة {doc}. جميع الحقوق محفوظة.",
+        "f_disclaimer": "هذا الموقع لا يغني عن الاستشارة الطبية.",
+    },
+}
+
 ICONS = {
     "phone": '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .3 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.4 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/>',
     "map":   '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>',
@@ -69,21 +134,40 @@ def icon(name, size=24):
             'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">%s</svg>'
             % (size, size, ICONS[name]))
 
+def canon_path(page):
+    """Chemin canonique : une page d'accueil se reference par son dossier."""
+    return page[:-len("index.html")] if page.endswith("index.html") else page
+
+
 def head(title, desc, page, depth=0, og_image="assets/img/2017_12_intestinCerveau.jpg", extra=""):
+    lang = "ar" if page.startswith("ar/") else "fr"
     up = "../" * depth
-    canon = "%s/%s" % (SITE_URL, "" if page == "index.html" else page)
+    canon = "%s/%s" % (SITE_URL, canon_path(page))
     verif = ('\n<meta name="google-site-verification" content="%s">' % GOOGLE_VERIFICATION
              if GOOGLE_VERIFICATION else "")
+    # Pages disponibles dans les deux langues : on le signale a Google (hreflang).
+    base = page[3:] if lang == "ar" else page
+    alts = ""
+    if base in AR_PAGES:
+        fr_u = "%s/%s" % (SITE_URL, canon_path(base))
+        ar_u = "%s/%s" % (SITE_URL, canon_path("ar/" + base))
+        alts = ('\n<link rel="alternate" hreflang="fr" href="%s">'
+                '\n<link rel="alternate" hreflang="ar" href="%s">'
+                '\n<link rel="alternate" hreflang="x-default" href="%s">'
+                '\n<meta property="og:locale:alternate" content="%s">'
+                % (fr_u, ar_u, fr_u, "fr_FR" if lang == "ar" else "ar_DZ"))
+    rtl = ' dir="rtl"' if lang == "ar" else ""
+    locale = "ar_DZ" if lang == "ar" else "fr_FR"
     return f"""<!DOCTYPE html>
-<html lang="fr">
+<html lang="{lang}"{rtl}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)}</title>
 <meta name="description" content="{html.escape(desc)}">
-<link rel="canonical" href="{canon}">
+<link rel="canonical" href="{canon}">{alts}
 <meta property="og:type" content="website">
-<meta property="og:locale" content="fr_FR">
+<meta property="og:locale" content="{locale}">
 <meta property="og:site_name" content="{SITE_NAME}">
 <meta property="og:title" content="{html.escape(title)}">
 <meta property="og:description" content="{html.escape(desc)}">
@@ -97,43 +181,54 @@ def head(title, desc, page, depth=0, og_image="assets/img/2017_12_intestinCervea
 <link rel="apple-touch-icon" href="{up}assets/img/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:wght@500;600&display=swap">
+<link rel="stylesheet" href="{FONTS[lang]}">
 <link rel="stylesheet" href="{up}assets/css/style.css">
 {extra}</head>
 <body>
-<a class="skip" href="#contenu">Aller au contenu</a>
+<a class="skip" href="#contenu">{UI[lang]["skip"]}</a>
 """
 
-def header(page, depth=0):
+def header(page, depth=0, lang="fr"):
+    ui = UI[lang]
     up = "../" * depth
+    # Les liens du menu arabe sont relatifs a /ar/ ; ceux du menu francais, a la page.
+    navp = "" if lang == "ar" else up
     items = []
-    for href, label in NAV:
+    for href, label in (NAV_AR if lang == "ar" else NAV):
         cur = ' aria-current="page"' if href == page else ""
-        items.append(f'        <li><a href="{up}{href}"{cur}>{label}</a></li>')
+        items.append(f'        <li><a href="{navp}{href}"{cur}>{label}</a></li>')
     links = "\n".join(items)
+    if lang == "ar":
+        switch_href, other = "../" + page, "fr"
+        addr, tel, name = ADDR2_AR, TEL_LTR, DOC_AR
+    else:
+        # Page sans equivalent arabe (articles, 404) : on renvoie vers l'accueil arabe.
+        switch_href, other = up + "ar/" + (page if page in AR_PAGES else "index.html"), "ar"
+        addr, tel, name = ADDR2, TEL_DISPLAY, DOC
     return f"""<div class="topbar">
   <div class="wrap">
-    <span>{icon('map', 15)} {ADDR2}</span>
-    <span>Prendre rendez-vous&nbsp;: <a class="tel-link" href="tel:{TEL_HREF}">{TEL_DISPLAY}</a></span>
+    <span>{icon('map', 15)} {addr}</span>
+    <span>{ui["rdv_top"]} <a class="tel-link" href="tel:{TEL_HREF}">{tel}</a>
+      <a class="lang-switch" href="{switch_href}" lang="{other}" hreflang="{other}">{ui["switch"]}</a></span>
   </div>
 </div>
 
 <header class="site-header">
   <div class="wrap">
-    <a class="brand" href="{up}index.html">
+    <a class="brand" href="{navp}index.html">
       <img src="{up}assets/img/2017_12_logo3.png" alt="" width="180" height="47">
       <span class="brand-txt">
-        <strong>{DOC}</strong>
-        <span>Neuropsychiatrie · Draria</span>
+        <strong>{name}</strong>
+        <span>{ui["brand_sub"]}</span>
       </span>
     </a>
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Ouvrir le menu">
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="{ui["menu"]}">
       <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
-    <nav class="nav" id="menu" aria-label="Navigation principale">
+    <nav class="nav" id="menu" aria-label="{ui["nav_label"]}">
       <ul>
 {links}
-        <li><a class="btn-rdv" href="{up}contact.html">Rendez-vous</a></li>
+        <li><a class="btn-rdv" href="{navp}contact.html">{ui["rdv_btn"]}</a></li>
       </ul>
     </nav>
   </div>
@@ -142,46 +237,55 @@ def header(page, depth=0):
 <main id="contenu">
 """
 
-def footer(depth=0):
+def footer(depth=0, lang="fr"):
+    ui = UI[lang]
     up = "../" * depth
-    nav_links = "\n".join(f'          <li><a href="{up}{h}">{l}</a></li>' for h, l in NAV)
+    navp = "" if lang == "ar" else up
+    nav_links = "\n".join(f'          <li><a href="{navp}{h}">{l}</a></li>'
+                          for h, l in (NAV_AR if lang == "ar" else NAV))
+    hours = "\n".join("          <li>%s</li>" % h for h in ui["f_hours_list"])
+    if lang == "ar":
+        name, spec = DOC_AR, "الطب العصبي النفسي — العلاج النفسي"
+        addr, tel, mail = "%s<br>%s" % (ADDR1_LTR, ADDR2_AR), TEL_LTR, EMAIL_LTR
+    else:
+        name, spec = DOC, SPEC
+        addr, tel, mail = "%s<br>%s" % (ADDR1, ADDR2), TEL_DISPLAY, EMAIL
+    rights = ui["f_rights"].format(year=YEAR, doc=name)
     return f"""</main>
 
 <footer class="site-footer">
   <div class="wrap">
     <div class="footer-grid">
       <div>
-        <h4>Le cabinet</h4>
-        <p class="tagline">{DOC}<br>{SPEC}</p>
-        <p class="tagline">Prise en charge des troubles psychologiques, psychiatriques et neurologiques.</p>
+        <h4>{ui["f_cabinet"]}</h4>
+        <p class="tagline">{name}<br>{spec}</p>
+        <p class="tagline">{ui["f_tag"]}</p>
       </div>
       <div>
-        <h4>Navigation</h4>
+        <h4>{ui["f_nav"]}</h4>
         <ul>
 {nav_links}
         </ul>
       </div>
       <div>
-        <h4>Coordonnées</h4>
+        <h4>{ui["f_coord"]}</h4>
         <ul>
-          <li>{ADDR1}<br>{ADDR2}</li>
-          <li><a class="tel-link" href="tel:{TEL_HREF}">{TEL_DISPLAY}</a></li>
-          <li><a href="mailto:{EMAIL}">{EMAIL}</a></li>
+          <li>{addr}</li>
+          <li><a class="tel-link" href="tel:{TEL_HREF}">{tel}</a></li>
+          <li><a href="mailto:{EMAIL}">{mail}</a></li>
         </ul>
       </div>
       <div>
-        <h4>Horaires</h4>
+        <h4>{ui["f_hours"]}</h4>
         <ul>
-          <li>Samedi – Jeudi&nbsp;: 08:00 – 17:30</li>
-          <li>Pause&nbsp;: 12:00 – 13:00</li>
-          <li>Mardi &amp; vendredi&nbsp;: fermé</li>
-          <li><a href="{up}horaires.html">Voir le détail</a></li>
+{hours}
+          <li><a href="{navp}horaires.html">{ui["f_detail"]}</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© {YEAR} Cabinet du {DOC}. Tous droits réservés.</span>
-      <span>Ce site ne remplace pas une consultation médicale.</span>
+      <span>{rights}</span>
+      <span>{ui["f_disclaimer"]}</span>
     </div>
   </div>
 </footer>
@@ -261,6 +365,7 @@ recent = "\n".join(post_card(a) for a in [x for x in articles if not x.get("auth
 SCHEMA = json.dumps({
     "@context": "https://schema.org",
     "@type": "MedicalBusiness",
+    "@id": SITE_URL + "/#cabinet",
     "name": "Cabinet du " + DOC,
     "description": "Cabinet de neuropsychiatrie, psychothérapie et relaxation thérapeutique à Draria, Alger.",
     "url": SITE_URL,
@@ -605,7 +710,7 @@ FORMATION = [
 ]
 EXPERIENCE = [
     ("Depuis mai 2015", "Neuropsychiatre, psychothérapeute", "Cabinet privé, Draria"),
-    ("Depuis février 2005", "Neuropsychiatre, psychothérapeute",
+    ("Février 2005", "Neuropsychiatre, psychothérapeute",
      "Cabinet de groupe (neuropsychiatrie – neurochirurgie), Rouiba"),
     ("Février 1993", "Assistante spécialiste en psychiatrie",
      "Établissement spécialisé en psychiatrie de Chéraga"),
@@ -917,12 +1022,19 @@ for i, a in enumerate(articles):
     write("articles/%s.html" % a["slug"], page)
 
 
+# --------------------------------------------------------------- version arabe
+
+import pages_ar
+pages_ar.build(globals())
+
+
 # --------------------------------------------------------------- annexes
 
-pages_for_map = [h for h, _ in NAV] + ["articles/%s.html" % a["slug"] for a in articles]
+pages_for_map = ([h for h, _ in NAV] + ["ar/" + p for p in AR_PAGES]
+                 + ["articles/%s.html" % a["slug"] for a in articles])
 today = "2026-09-18"
 urls = "\n".join(
-    "  <url><loc>%s/%s</loc><lastmod>%s</lastmod></url>" % (SITE_URL, "" if p == "index.html" else p, today)
+    "  <url><loc>%s/%s</loc><lastmod>%s</lastmod></url>" % (SITE_URL, canon_path(p), today)
     for p in pages_for_map)
 write("sitemap.xml",
       '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -932,7 +1044,7 @@ write("robots.txt", "User-agent: *\nAllow: /\n\nSitemap: %s/sitemap.xml\n" % SIT
 write(".nojekyll", "")
 
 write("404.html", head("Page introuvable — " + DOC, "La page demandée n’existe pas.", "404.html",
-      extra='<meta name="robots" content="noindex">\n')
+      extra='<meta name="robots" content="noindex">\n<base href="/">\n')
       + header("") + f"""
 <section>
   <div class="narrow" style="text-align:center;padding:3rem 0">
