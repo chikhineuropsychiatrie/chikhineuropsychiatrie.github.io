@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Genere le site statique du cabinet a partir de build/articles.json."""
-import json, os, io, html, datetime, hashlib
+import json, os, io, html, datetime, hashlib, urllib.parse
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -75,6 +75,18 @@ ADDR2_AR = "الدرارية، الجزائر العاصمة"
 TEL_LTR   = '<span dir="ltr">%s</span>' % TEL_DISPLAY
 ADDR1_LTR = '<span dir="ltr">%s</span>' % ADDR1
 EMAIL_LTR = '<span dir="ltr">%s</span>' % EMAIL
+
+# WhatsApp du cabinet : pour les rendez-vous uniquement, pas de question medicale.
+WA_DISPLAY = "07 84 81 08 52"
+WA_LTR = '<span dir="ltr">%s</span>' % WA_DISPLAY
+WA_URL = {
+    "fr": "https://wa.me/213784810852?text=" + urllib.parse.quote("Bonjour, je souhaite prendre rendez-vous."),
+    "ar": "https://wa.me/213784810852?text=" + urllib.parse.quote("السلام عليكم، أرغب في حجز موعد."),
+}
+WA_NOTE = {
+    "fr": "Pour les rendez-vous uniquement, pas de question médicale par message.",
+    "ar": "لحجز المواعيد فقط، دون أسئلة طبية عبر الرسائل.",
+}
 
 FONTS = {
     "fr": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:wght@500;600&display=swap",
@@ -258,9 +270,11 @@ def footer(depth=0, lang="fr"):
     if lang == "ar":
         name, spec = DOC_AR, "الطب العصبي النفسي — العلاج النفسي"
         addr, tel, mail = "%s<br>%s" % (ADDR1_LTR, ADDR2_AR), TEL_LTR, EMAIL_LTR
+        wa = "واتساب: " + WA_LTR
     else:
         name, spec = DOC, SPEC
         addr, tel, mail = "%s<br>%s" % (ADDR1, ADDR2), TEL_DISPLAY, EMAIL
+        wa = "WhatsApp : " + WA_DISPLAY
     rights = ui["f_rights"].format(year=YEAR, doc=name)
     return f"""</main>
 
@@ -283,6 +297,7 @@ def footer(depth=0, lang="fr"):
         <ul>
           <li>{addr}</li>
           <li><a class="tel-link" href="tel:{TEL_HREF}">{tel}</a></li>
+          <li><a href="{WA_URL[lang]}" target="_blank" rel="noopener">{wa}</a></li>
           <li><a href="mailto:{EMAIL}">{mail}</a></li>
         </ul>
       </div>
@@ -525,6 +540,58 @@ def section_videos(lang, up):
 """
 
 
+# ---- Photos du cabinet (fiche Sihhatech du cabinet ; cahier de l'accueil floute).
+GALERIE = [
+    ("cabinet-bureau.jpg", "Le bureau de consultation",
+     "Le bureau de consultation, avec ses fauteuils, sa table basse et sa fenêtre",
+     "مكتب الاستشارة", "مكتب الاستشارة بكراسيه وطاولته المنخفضة ونافذته"),
+    ("cabinet-diplomes.jpg", "Le bureau, côté diplômes",
+     "Le bureau du médecin, devant les diplômes encadrés au mur",
+     "المكتب، جهة الشهادات", "مكتب الطبيبة أمام الشهادات المعلقة على الجدار"),
+    ("cabinet-accueil.jpg", "L’accueil",
+     "Le bureau d’accueil, devant un mur de faïence",
+     "الاستقبال", "مكتب الاستقبال أمام جدار من الزليج"),
+]
+
+
+def galerie(lang, up):
+    items = []
+    for img, cap_fr, alt_fr, cap_ar, alt_ar in GALERIE:
+        cap, alt = (cap_ar, alt_ar) if lang == "ar" else (cap_fr, alt_fr)
+        items.append(f'      <figure><img src="{up}assets/img/{img}" alt="{html.escape(alt)}" '
+                     f'loading="lazy" width="1400" height="1050"><figcaption>{cap}</figcaption></figure>')
+    eyebrow, titre = ("زيارة", "العيادة بالصور") if lang == "ar" else ("Visite", "Le cabinet en images")
+    liste = "\n".join(items)
+    return f"""
+<section class="soft">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">{eyebrow}</p>
+      <h2>{titre}</h2>
+    </div>
+    <div class="galerie">
+{liste}
+    </div>
+  </div>
+</section>
+"""
+
+
+def photo_certificats(lang, up):
+    alt, cap = (("شهادات معلقة على جدار العيادة", "الشهادات على جدار العيادة") if lang == "ar"
+                else ("Certificats encadrés au mur du cabinet", "Les certificats, au mur du cabinet"))
+    return (f'        <figure class="photo-certificats">\n'
+            f'          <img src="{up}assets/img/cabinet-certificats.jpg" alt="{alt}" loading="lazy" width="900" height="1200">\n'
+            f'          <figcaption>{cap}</figcaption>\n'
+            f'        </figure>')
+
+
+def wa_bouton(lang, cls="btn-ghost"):
+    label = "واتساب" if lang == "ar" else "WhatsApp"
+    return (f'<a class="btn {cls}" href="{WA_URL[lang]}" target="_blank" rel="noopener">'
+            f'{icon("chat", 18)} {label}</a>')
+
+
 # L'accueil met en avant les derniers articles du Dr Chikhi elle-meme : la section
 # s'intitule « Articles du Dr ... » et doit porter sur la psychiatrie.
 recent = "\n".join(post_card(a) for a in [x for x in articles if not x.get("author")][:3])
@@ -629,7 +696,7 @@ index = head(
         </ul>
       </div>
       <div class="media">
-        <img src="assets/img/2017_12_lotus-zen1.jpg" alt="Fleur de lotus posée sur l’eau" loading="lazy" width="1500" height="630">
+        <img src="assets/img/cabinet-bureau.jpg" alt="Le bureau de consultation du cabinet, à Draria" loading="lazy" width="1400" height="1050">
       </div>
     </div>
   </div>
@@ -696,6 +763,7 @@ index = head(
     </p>
     <div class="btn-row">
       <a class="btn btn-primary" href="tel:{TEL_HREF}">{icon('phone', 18)} {TEL_DISPLAY}</a>
+      {wa_bouton('fr')}
       <a class="btn btn-ghost" href="contact.html">Voir les coordonnées</a>
     </div>
   </div>
@@ -756,7 +824,8 @@ cabinet = head(
   </div>
 </section>
 
-<section class="soft">
+{galerie('fr', '')}
+<section>
   <div class="wrap">
     <div class="section-head">
       <p class="eyebrow">Consultations</p>
@@ -768,7 +837,7 @@ cabinet = head(
   </div>
 </section>
 
-<section>
+<section class="soft">
   <div class="wrap">
     <div class="split">
       <div class="body">
@@ -799,6 +868,7 @@ cabinet = head(
     <p>Une assistante répondra à vos appels pour fixer un rendez-vous.</p>
     <div class="btn-row">
       <a class="btn btn-primary" href="tel:{TEL_HREF}">{icon('phone', 18)} {TEL_DISPLAY}</a>
+      {wa_bouton('fr')}
       <a class="btn btn-ghost" href="contact.html">Nous trouver</a>
     </div>
   </div>
@@ -968,6 +1038,7 @@ cursus = head(
 {certs}
         </ul>
       </div>
+      <div class="colonne">
       <div class="card">
         <div class="ico">{icon('users')}</div>
         <h3>Sociétés savantes</h3>
@@ -975,6 +1046,8 @@ cursus = head(
           <li>Membre de la Société Algérienne de Psychiatrie (S.A.P)</li>
           <li>Membre de l’Association Algérienne des Psychiatres d’Exercice Privé (AAPEP)</li>
         </ul>
+      </div>
+{photo_certificats('fr', '')}
       </div>
     </div>
   </div>
@@ -989,6 +1062,7 @@ cursus = head(
     </p>
     <div class="btn-row">
       <a class="btn btn-primary" href="tel:{TEL_HREF}">{icon('phone', 18)} {TEL_DISPLAY}</a>
+      {wa_bouton('fr')}
       <a class="btn btn-ghost" href="contact.html">Nous contacter</a>
     </div>
   </div>
@@ -1058,6 +1132,13 @@ contact = head(
             </span>
           </li>
           <li>
+            <span class="ico">{icon('chat', 21)}</span>
+            <span><strong>WhatsApp</strong>
+              <a href="{WA_URL['fr']}" target="_blank" rel="noopener">{WA_DISPLAY}</a><br>
+              <span style="color:var(--ink-faint);font-size:.9rem">{WA_NOTE['fr']}</span>
+            </span>
+          </li>
+          <li>
             <span class="ico">{icon('mail', 21)}</span>
             <span><strong>E-mail</strong><a href="mailto:{EMAIL}">{EMAIL}</a></span>
           </li>
@@ -1077,6 +1158,7 @@ contact = head(
         </ul>
         <div class="btn-row" style="margin-top:2rem">
           <a class="btn btn-primary" href="tel:{TEL_HREF}">{icon('phone', 18)} Appeler le cabinet</a>
+          {wa_bouton('fr', 'btn-outline')}
           <a class="btn btn-outline" href="mailto:{EMAIL}">Écrire un e-mail</a>
         </div>
       </div>

@@ -42,6 +42,7 @@ def build(g):
     <p>{text}</p>
     <div class="btn-row">
       <a class="btn btn-primary" href="tel:{TEL_HREF}">{icon('phone', 18)} {TEL}</a>
+      {g['wa_bouton']('ar')}
       <a class="btn btn-ghost" href="{second_href}">{second_label}</a>
     </div>
   </div>
@@ -162,7 +163,7 @@ def build(g):
         </ul>
       </div>
       <div class="media">
-        <img src="../assets/img/2017_12_lotus-zen1.jpg" alt="زهرة لوتس على سطح الماء" loading="lazy" width="1500" height="630">
+        <img src="../assets/img/cabinet-bureau.jpg" alt="مكتب الاستشارة في العيادة بالدرارية" loading="lazy" width="1400" height="1050">
       </div>
     </div>
   </div>
@@ -262,7 +263,8 @@ def build(g):
   </div>
 </section>
 
-<section class="soft">
+{g['galerie']('ar', '../')}
+<section>
   <div class="wrap">
     <div class="section-head">
       <p class="eyebrow">الاستشارات</p>
@@ -272,7 +274,7 @@ def build(g):
   </div>
 </section>
 
-<section>
+<section class="soft">
   <div class="wrap">
     <div class="split">
       <div class="body">
@@ -443,12 +445,15 @@ def build(g):
 {checklist(CERTIFICATS)}
         </ul>
       </div>
+      <div class="colonne">
       <div class="card">
         <div class="ico">{icon('users')}</div>
         <h3>الجمعيات العلمية</h3>
         <ul class="list-check">
 {checklist(SOCIETES)}
         </ul>
+      </div>
+{g['photo_certificats']('ar', '../')}
       </div>
     </div>
   </div>
@@ -485,6 +490,13 @@ def build(g):
             </span>
           </li>
           <li>
+            <span class="ico">{icon('chat', 21)}</span>
+            <span><strong>واتساب</strong>
+              <a href="{g['WA_URL']['ar']}" target="_blank" rel="noopener">{g['WA_LTR']}</a><br>
+              <span style="color:var(--ink-faint);font-size:.9rem">{g['WA_NOTE']['ar']}</span>
+            </span>
+          </li>
+          <li>
             <span class="ico">{icon('mail', 21)}</span>
             <span><strong>البريد الإلكتروني</strong><a href="mailto:{MAIL}">{MAIL_LTR}</a></span>
           </li>
@@ -504,6 +516,7 @@ def build(g):
         </ul>
         <div class="btn-row" style="margin-top:2rem">
           <a class="btn btn-primary" href="tel:{TEL_HREF}">{icon('phone', 18)} اتصلوا بالعيادة</a>
+          {g['wa_bouton']('ar', 'btn-outline')}
           <a class="btn btn-outline" href="mailto:{MAIL}">راسلونا بالبريد الإلكتروني</a>
         </div>
       </div>
