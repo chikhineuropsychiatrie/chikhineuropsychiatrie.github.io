@@ -192,6 +192,9 @@ section.tight { padding: clamp(2rem, 4vw, 3rem) 0; }
 .split { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: clamp(2rem, 4vw, 3.5rem); align-items: center; }
 .split .media img { border-radius: var(--radius); box-shadow: var(--shadow-lg); width: 100%; }
 .split .body p:last-child { margin-bottom: 0; }
+figure.media { margin: 0; }
+.media figcaption { margin-top: .75rem; font-size: .8rem; line-height: 1.5; color: var(--ink-faint); }
+.media figcaption a { color: inherit; }
 
 /* ---------- Horaires ---------- */
 .hours { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }

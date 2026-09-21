@@ -18,6 +18,20 @@ ADDR1 = "Lotissement des Jeunes Aveugles, Lot 100"
 ADDR2 = "Draria, Alger"
 YEAR  = 2026
 
+# Nom du site affiche par Google au-dessus de l'URL.
+SITE_NAME = "Dr Chikhi Neuropsychiatrie"
+
+# Position du cabinet : epingle de sa fiche Google (CID 0xaf08c0f369c65df1),
+# la meme que celle qu'utilisent deja les patients pour venir.
+GEO_LAT, GEO_LON = 36.7119136, 2.9960607
+GMAPS_URL = "https://maps.google.com/?cid=12612542908135267825"
+_DLON, _DLAT = 0.006, 0.0035   # cadrage de la carte autour du cabinet
+MAP_EMBED = ("https://www.openstreetmap.org/export/embed.html"
+             "?bbox=%.5f%%2C%.5f%%2C%.5f%%2C%.5f&amp;layer=mapnik&amp;marker=%.7f%%2C%.7f"
+             % (GEO_LON - _DLON, GEO_LAT - _DLAT, GEO_LON + _DLON, GEO_LAT + _DLAT, GEO_LAT, GEO_LON))
+OSM_URL = ("https://www.openstreetmap.org/?mlat=%.7f&amp;mlon=%.7f#map=18/%.7f/%.7f"
+           % (GEO_LAT, GEO_LON, GEO_LAT, GEO_LON))
+
 MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet",
         "août", "septembre", "octobre", "novembre", "décembre"]
 
@@ -67,7 +81,7 @@ def head(title, desc, page, depth=0, og_image="assets/img/2017_12_intestinCervea
 <link rel="canonical" href="{canon}">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="fr_FR">
-<meta property="og:site_name" content="{DOC}">
+<meta property="og:site_name" content="{SITE_NAME}">
 <meta property="og:title" content="{html.escape(title)}">
 <meta property="og:description" content="{html.escape(desc)}">
 <meta property="og:url" content="{canon}">
@@ -248,6 +262,8 @@ SCHEMA = json.dumps({
     "telephone": "+213 549 14 36 48",
     "email": EMAIL,
     "medicalSpecialty": ["Psychiatric", "Neurologic"],
+    "geo": {"@type": "GeoCoordinates", "latitude": GEO_LAT, "longitude": GEO_LON},
+    "hasMap": GMAPS_URL,
     "address": {
         "@type": "PostalAddress",
         "streetAddress": ADDR1,
@@ -267,8 +283,8 @@ SCHEMA = json.dumps({
 WEBSITE_SCHEMA = json.dumps({
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": DOC,
-    "alternateName": ["Dr Chikhi Neuropsychiatrie", "Cabinet du Dr Chikhi"],
+    "name": SITE_NAME,
+    "alternateName": [DOC, "Cabinet du Dr Chikhi"],
     "url": SITE_URL + "/",
 }, ensure_ascii=False, indent=1)
 
@@ -448,9 +464,15 @@ cabinet = head(
           en souffrance mentale ou psychologique.
         </p>
       </div>
-      <div class="media">
-        <img src="assets/img/2016_02_hospital.jpg" alt="Le cabinet médical" loading="lazy">
-      </div>
+      <figure class="media">
+        <img src="assets/img/draria-chateau.jpg" alt="Le château de Draria et ses deux tourelles pointues, sous un ciel bleu" width="1200" height="804" loading="lazy">
+        <figcaption>
+          Le château de Draria. Photo&nbsp;:
+          <a href="https://commons.wikimedia.org/wiki/File:Photo_chateau_draria_30052016.jpg" target="_blank" rel="noopener">Sandervalya</a>,
+          <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.fr" target="_blank" rel="noopener">CC BY-SA 4.0</a>,
+          via Wikimedia Commons.
+        </figcaption>
+      </figure>
     </div>
   </div>
 </section>
@@ -784,13 +806,14 @@ contact = head(
         </p>
         <iframe
           class="map-embed"
-          title="Carte de Draria, Alger"
+          title="Carte : emplacement du cabinet à Draria, Alger"
           loading="lazy"
           referrerpolicy="no-referrer-when-downgrade"
-          src="https://www.openstreetmap.org/export/embed.html?bbox=2.9560%2C36.7020%2C3.0180%2C36.7400&amp;layer=mapnik"></iframe>
+          src="{MAP_EMBED}"></iframe>
         <p style="margin-top:1rem;font-size:.9rem">
-          <a href="https://www.openstreetmap.org/search?query=Draria%2C%20Alger" target="_blank" rel="noopener">
-            Ouvrir dans OpenStreetMap →</a>
+          <a href="{GMAPS_URL}" target="_blank" rel="noopener">Itinéraire avec Google Maps →</a>
+          &nbsp;·&nbsp;
+          <a href="{OSM_URL}" target="_blank" rel="noopener">Ouvrir dans OpenStreetMap →</a>
         </p>
       </div>
     </div>
